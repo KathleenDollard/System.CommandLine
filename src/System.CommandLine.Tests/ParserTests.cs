@@ -837,6 +837,26 @@ namespace System.CommandLine.Tests
                   .BeEquivalentTo(option2);
         }
 
+        [Fact(Skip = "Discussion needed to determine if unnamed arguments from end user are allowed.")]
+        public void Position_is_used_to_resolve_option_when_name_is_not_specified_on_command_line()
+        {
+            var command = Create.Command(
+                "dosomething", "",
+                Create.Option("Age", ""));
+
+            CommandParseResult result = command.Parse("dosomething 42");
+            result.ValueForOption("Age").Should().Be("42");
+        }
+
+        [Fact]
+        public void Empty_string_is_not_valid_for_option_name_when_creating_and_option()
+        {
+            Action createOption = () => Create.Option("", "");
+
+            createOption.ShouldThrow<ArgumentException>();
+        }
+
+
         [Fact]
         public void Empty_string_can_be_accepted_as_a_command_line_argument_when_enclosed_in_double_quotes()
         {
