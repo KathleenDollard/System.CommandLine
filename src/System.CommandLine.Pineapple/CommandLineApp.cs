@@ -16,8 +16,9 @@ namespace System.CommandLine.Pineapple
             _helpOption = AddOption("--help", "Show help output");
         }
 
-        public int Run(Func<Option, int> method, string[] args)
+        public int Run(Func<Option, Option, int> method, string[] args)
         {
+            var parameters = method.Method.GetParameters();
             var parser = new Parser(new CommandDefinition(_symbols.ToArray()));
 
             var result = parser.Parse(args);
