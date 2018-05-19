@@ -16,7 +16,7 @@ namespace System.CommandLine.Pineapple
             _helpOption = AddOption("--help", "Show help output");
         }
 
-        public int Run(string[] args)
+        public int Run(Func<Option, int> method, string[] args)
         {
             var parser = new Parser(new CommandDefinition(_symbols.ToArray()));
 
@@ -54,14 +54,30 @@ namespace System.CommandLine.Pineapple
         }
 
         public CommandOption AddOption(string shortName, string longName, string description)
-            => AddOption(new[] {shortName, longName}, description);
+            => AddOption(new[] { shortName, longName }, description);
 
         public CommandOption AddOption(string name, string description)
-            => AddOption(new[] {name}, description);
+            => AddOption(new[] { name }, description);
 
         public CommandOption AddOption(string[] aliases, string description)
         {
             var definition = new OptionDefinition(aliases, description);
+
+            _symbols.Add(definition);
+
+            return new CommandOption(definition);
+        }
+
+        public CommandOption AddOption<T>(string shortName, string longName, string description)
+            => AddOption<T>(new[] { shortName, longName }, description);
+
+        public CommandOption AddOption<T>(string name, string description)
+            => AddOption<T>(new[] { name }, description);
+
+        public CommandOption AddOption<T>(string[] aliases, string description)
+        {
+            var definition = new OptionDefinition(aliases, description,
+            argumentDefinition: new ArgumentDefinitionBuilder().ParseArgumentsAs<T>());
 
             _symbols.Add(definition);
 

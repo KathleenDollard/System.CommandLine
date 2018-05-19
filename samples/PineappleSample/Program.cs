@@ -10,14 +10,15 @@ namespace PineappleSample
         {
             var app = new CommandLineApp();
 
-            app.AddOption("-n", "--name", "The name of the person to greet");
+            app.AddOption<string>("-n", "--name", "The name of the person to greet");
 
-            app.OnExecute(cmd =>
-            {
-                Console.WriteLine("Hello " + cmd["name"].GetValueOrDefault());
-            });
+            return app.Run(DoSomething, args);
+        }
 
-            return app.Run(args);
+        private static int DoSomething(Option name)
+        {
+            Console.WriteLine("Hello " + name.GetValueOrDefault());
+            return 0;
         }
     }
 }
