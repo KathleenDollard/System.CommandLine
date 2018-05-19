@@ -18,7 +18,6 @@ namespace System.CommandLine.Pineapple
 
         public int Run(Func<Option, Option, int> method, string[] args)
         {
-            var parameters = method.Method.GetParameters();
             var parser = new Parser(new CommandDefinition(_symbols.ToArray()));
 
             var result = parser.Parse(args);
@@ -34,9 +33,16 @@ namespace System.CommandLine.Pineapple
                 return 3;
             }
 
-            _action?.Invoke(result.Command(), result);
+            var command = result.Command();
+            var parameters = method.Method.GetParameters();
+            var values = new Symbol[parameters.Length];
+            for (var i = 0; i < parameters.Length; i++)
+            {
+                var parameter = parameters[i];
+                values[i] = command[parameter.Name];
+            }
 
-            return 0;
+            return (int) method.Method.Invoke(null, values);
         }
 
         private static int DefaultParseErrorHandler(ParseResult result)
