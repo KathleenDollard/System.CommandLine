@@ -17,7 +17,7 @@ namespace PineappleSample
                 Console.WriteLine("Hello " + cmd["name"].GetValueOrDefault());
             });
 
-            return app.Execute(args);
+            return app.Run(args);
         }
     }
 }
