@@ -1,6 +1,7 @@
 ﻿using System;
 using System.CommandLine;
 using System.CommandLine.Pineapple;
+using System.Security.Cryptography;
 
 namespace PineappleSample
 {
@@ -10,15 +11,26 @@ namespace PineappleSample
         {
             var app = new CommandLineApp();
 
-            app.AddOption<string>("-n", "--firstName", "The name of the person to greet");
-            app.AddOption<string>("--lastName", "The last name of the person");
+            var defaultCmd = app.AddCommand("", SayHello);
+            defaultCmd.AddOption<string>("--lastName", "The last name of the person");
+            defaultCmd.AddOption<string>("-n", "--firstName", "The name of the person to greet");
 
-            return app.Run(SayHello, args);
+            var cmd1 = app.AddCommand("call business", CallPhoneNumber);
+            var cmd2 = app.AddCommand("call person", CallPhoneNumber);
+            cmd.AddOption<string>("-p", "--phone-number", "Phone number");
+
+            return app.Run(args);
         }
 
         private static int SayHello(Option firstName, Option lastName)
         {
-            Console.WriteLine($"Hello {firstName.GetValueOrDefault()} {lastName.GetValueOrDefault()}");
+            Console.WriteLine($"Hello {firstName.GetValueOrDefault<string>()} {lastName.GetValueOrDefault()}");
+            return 0;
+        }
+
+        private static int CallPhoneNumber(Option phoneNumber)
+        {
+            Console.WriteLine($"Starting a phone call to .... {phoneNumber.GetValueOrDefault()}");
             return 0;
         }
     }

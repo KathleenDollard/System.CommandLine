@@ -106,5 +106,15 @@ namespace System.CommandLine.Pineapple
         {
             _errorHandler = action ?? throw new ArgumentNullException(nameof(action));
         }
+
+        public object AddAction(string name)
+        {
+            return null;
+        }
+
+        public CommandLineApp AddCommand(string name, Func<Option, int> action)
+        {
+            return new CommandLineApp();
+        }
     }
 }
