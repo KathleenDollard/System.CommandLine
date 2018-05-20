@@ -31,6 +31,8 @@ namespace System.CommandLine
             var errors = new List<ParseError>(lexResult.Errors);
             var unmatchedTokens = new List<string>();
 
+            var optionQueue = GatherOptions(SymbolDefinitions).ToList();
+
             while (unparsedTokens.Any())
             {
                 var token = unparsedTokens.Dequeue();
@@ -66,20 +68,46 @@ namespace System.CommandLine
 
                 var added = false;
 
-                foreach (var parsedOption in Enumerable.Reverse(allSymbols))
+                foreach (var topLevelSymbol in Enumerable.Reverse(allSymbols))
                 {
-                    var option = parsedOption.TryTakeToken(token);
+                    Symbol option = topLevelSymbol.TryTakeToken(token);
 
                     if (option != null)
                     {
                         allSymbols.Add(option);
                         added = true;
+                        if (token.Type is TokenType.Option)
+                        {
+                            var existing = optionQueue.FirstOrDefault(name => name == option.Name);
+                            if (existing != null)
+                            {
+                                // we've used this option - don't use it again
+                                optionQueue.Remove(existing);
+                            }
+                        }
                         break;
                     }
 
                     if (token.Type == TokenType.Argument &&
-                        parsedOption.SymbolDefinition is CommandDefinition)
+                        topLevelSymbol.SymbolDefinition is CommandDefinition)
                     {
+                        var optionName = optionQueue.FirstOrDefault();
+                        if (optionName != null)
+                        {
+                            optionQueue.RemoveAt(0);
+                            var newToken = new Token("-" + optionName, TokenType.Option);
+                            option = topLevelSymbol.TryTakeToken(newToken);
+                            if (option != null)
+                            {
+                                allSymbols.Add(option);
+                                option = topLevelSymbol.TryTakeToken(token);
+                                if (option != null)
+                                {
+                                    allSymbols.Add(option);
+                                    added = true;
+                                }
+                            }
+                        }
                         break;
                     }
                 }
@@ -104,6 +132,29 @@ namespace System.CommandLine
                 unmatchedTokens,
                 errors,
                 rawInput);
+        }
+
+        private IEnumerable<string> GatherOptions(SymbolDefinitionSet symbolDefinitions)
+        {
+            var optionList = new List<string>();
+            foreach (var symDef in symbolDefinitions) //.Where( s => s is OptionDefinition))
+            {
+                if (symDef is OptionDefinition)
+                {
+                    var validator = symDef.ArgumentDefinition.SymbolValidators.FirstOrDefault();
+                    if (validator != null)
+                    {
+                        if (validator.Method.Name.Contains("ExactlyOne"))
+                        {
+                            optionList.Add(symDef.Name);
+                        }
+                    }
+                }
+
+                optionList.AddRange(GatherOptions(symDef.SymbolDefinitions));
+            }
+
+            return optionList;
         }
 
         internal IReadOnlyCollection<string> NormalizeRootCommand(IReadOnlyCollection<string> args)
