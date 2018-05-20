@@ -238,18 +238,18 @@ namespace System.CommandLine
 
         private static bool CanBeUnbundled(
             this string arg,
-            IReadOnlyCollection<Token> knownTokens)
-        {
-            return arg.StartsWith("-") &&
-                   !arg.StartsWith("--") &&
-                   arg.RemovePrefix()
-                      .All(CharacterIsValidOptionAlias);
+            IReadOnlyCollection<Token> knownTokens) =>
+            arg.StartsWith("-") &&
+            !arg.StartsWith("--") &&
+            arg.RemovePrefix()
+               .All(c => knownTokens
+                        .Where(t => t.Type == TokenType.Option)
+                        .Select(t => t.Value.RemovePrefix())
+                        .Contains(c.ToString()));
 
-            bool CharacterIsValidOptionAlias(char c) =>
-                knownTokens.Where(t => t.Type == TokenType.Option)
-                           .Select(t => t.Value.RemovePrefix())
-                           .Contains(c.ToString());
-        }
+        private static bool HasDelimiter(string arg) =>
+            arg.Contains("=") ||
+            arg.Contains(":");
 
         private static bool HasPrefix(string arg) => _optionPrefixStrings.Any(arg.StartsWith);
 

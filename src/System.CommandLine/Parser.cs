@@ -21,8 +21,9 @@ namespace System.CommandLine
         internal ParserConfiguration Configuration { get; }
         internal SymbolDefinitionSet SymbolDefinitions { get; }
 
-        public virtual ParseResult Parse(IReadOnlyCollection<string> rawTokens, string rawInput = null)
+        public virtual ParseResult Parse(IReadOnlyCollection<string> arguments, string rawInput = null)
         {
+            var rawTokens = arguments;  // allow a more user-friendly name for callers of Parse
             var lexResult = NormalizeRootCommand(rawTokens).Lex(Configuration);
             var unparsedTokens = new Queue<Token>(lexResult.Tokens);
             var allSymbols = new List<Symbol>();
