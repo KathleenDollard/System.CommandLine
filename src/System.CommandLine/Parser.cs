@@ -32,7 +32,7 @@ namespace System.CommandLine
             Command rootCommand = null;
             Command innermostCommand = null;
 
-            var optionQueue = GatherOptions(SymbolDefinitions).ToList();
+            var optionQueue = GatherOptions(Configuration.SymbolDefinitions).ToList();
 
             while (unparsedTokens.Any())
             {
