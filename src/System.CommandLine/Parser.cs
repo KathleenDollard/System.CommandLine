@@ -165,6 +165,29 @@ namespace System.CommandLine
             return optionList;
         }
 
+        //internal IReadOnlyCollection<string> NormalizeRootCommand(IReadOnlyCollection<string> args)
+        //{
+        //   var optionList = new List<string>();
+        //  foreach (var symDef in symbolDefinitions) //.Where( s => s is OptionDefinition))
+        //    {
+        //        if (symDef is OptionDefinition)
+        //        {
+        //            var validator = symDef.ArgumentDefinition.SymbolValidators.FirstOrDefault();
+        //            if (validator != null)
+        //            {
+        //                if (validator.Method.Name.Contains("ExactlyOne"))
+        //                {
+        //                    optionList.Add(symDef.Name);
+        //                }
+        //            }
+        //        }
+        //
+        //        optionList.AddRange(GatherOptions(symDef.SymbolDefinitions));
+        //    }
+        //
+        //    return optionList;
+        //}
+
         internal IReadOnlyCollection<string> NormalizeRootCommand(IReadOnlyCollection<string> args)
         {
             var firstArg = args.FirstOrDefault();
