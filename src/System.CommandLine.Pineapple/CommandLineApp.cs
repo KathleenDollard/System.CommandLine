@@ -1,48 +1,39 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.CommandLine.Builder;
+using System.CommandLine;
+using System.Reflection;
+using System.Linq;
 
 namespace System.CommandLine.Pineapple
 {
     public class CommandLineApp
     {
-        private Action<Command, ParseResult> _action;
         private Func<ParseResult, int> _errorHandler = DefaultParseErrorHandler;
         private readonly List<SymbolDefinition> _symbols = new List<SymbolDefinition>();
-        private CommandOption _helpOption;
+        private Dictionary<CommandDefinitionBuilder, MethodInfo> Actions { get; } =
+            new Dictionary<CommandDefinitionBuilder, MethodInfo>();
 
-        public CommandLineApp()
+        public int Run(string args)
         {
-            _helpOption = AddOption("--help", "Show help output");
-        }
+            ParserConfiguration configuration = new ParserConfiguration(
+                Actions.Keys.Select(item => item.BuildCommandDefinition()).Cast<SymbolDefinition>().ToList().AsReadOnly());
 
-        public int Run(Func<Option, Option, int> method, string[] args)
-        {
-            var parser = new Parser(new CommandDefinition(_symbols.ToArray()));
+            var parser = new Parser(configuration);
 
-            var result = parser.Parse(args);
+            ParseResult result = parser.Parse(args);
 
             if (result.Errors.Count > 0)
             {
                 return _errorHandler(result);
             }
 
-            if (result.HasOption("help"))
-            {
-                Console.WriteLine(result.CommandDefinition().HelpView());
-                return 3;
-            }
-
             var command = result.Command();
-            var parameters = method.Method.GetParameters();
-            var values = new Symbol[parameters.Length];
-            for (var i = 0; i < parameters.Length; i++)
-            {
-                var parameter = parameters[i];
-                values[i] = command[parameter.Name];
-            }
 
-            return (int) method.Method.Invoke(null, values);
+            MethodInfo method = Actions.SingleOrDefault((item=>item.Key.Name == command.Name)).Value;
+            ParameterInfo[] parameters = method.GetParameters();
+
+            return (int) method.Invoke(null, parameters.Select(item => command[item.Name]).ToArray());
         }
 
         private static int DefaultParseErrorHandler(ParseResult result)
@@ -59,9 +50,6 @@ namespace System.CommandLine.Pineapple
 
             return 1;
         }
-
-        public CommandOption AddOption(string shortName, string longName, string description)
-            => AddOption(new[] { shortName, longName }, description);
 
         public CommandOption AddOption(string name, string description)
             => AddOption(new[] { name }, description);
@@ -91,30 +79,16 @@ namespace System.CommandLine.Pineapple
             return new CommandOption(definition);
         }
 
-        public void OnExecute(Action action)
-            => OnExecute((_, __) => action());
-
-        public void OnExecute(Action<Command> action)
-            => OnExecute((cmd, _) => action(cmd));
-
-        public void OnExecute(Action<Command, ParseResult> action)
-        {
-            _action = action ?? throw new ArgumentNullException(nameof(action));
-        }
-
         public void OnParseError(Func<ParseResult, int> action)
         {
             _errorHandler = action ?? throw new ArgumentNullException(nameof(action));
         }
 
-        public object AddAction(string name)
+        public CommandLineDefinition AddCommand<T>(string name, Func<Option, T> action)
         {
-            return null;
-        }
-
-        public CommandLineApp AddCommand(string name, Func<Option, int> action)
-        {
-            return new CommandLineApp();
+            CommandDefinitionBuilder commandDefinitionBuilder = new CommandDefinitionBuilder(name);
+            Actions.Add(commandDefinitionBuilder, action.Method);
+            return new CommandLineDefinition(commandDefinitionBuilder);
         }
     }
 }
