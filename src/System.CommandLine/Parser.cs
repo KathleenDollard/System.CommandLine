@@ -24,12 +24,11 @@ namespace System.CommandLine
 
         public virtual ParseResult Parse(IReadOnlyCollection<string> rawTokens, string rawInput = null)
         {
-            var unparsedTokens = new Queue<Token>(
-                NormalizeRootCommand(rawTokens)
-                    .Lex(_configuration));
+            var lexResult = NormalizeRootCommand(rawTokens).Lex(_configuration);
+            var unparsedTokens = new Queue<Token>(lexResult.Tokens);
             var rootSymbols = new SymbolSet();
             var allSymbols = new List<Symbol>();
-            var errors = new List<ParseError>();
+            var errors = new List<ParseError>(lexResult.Errors);
             var unmatchedTokens = new List<string>();
 
             while (unparsedTokens.Any())
@@ -95,15 +94,6 @@ namespace System.CommandLine
             {
                 errors.AddRange(
                     unmatchedTokens.Select(token => new ParseError(_configuration.ValidationMessages.UnrecognizedCommandOrArgument(token))));
-            }
-
-            if (_configuration.RootCommandIsImplicit)
-            {
-                rawTokens = rawTokens.Skip(1).ToArray();
-                var parsedOptions = rootSymbols
-                                     .SelectMany(o => o.Children)
-                                     .ToArray();
-                rootSymbols = new SymbolSet(parsedOptions);
             }
 
             return new ParseResult(
