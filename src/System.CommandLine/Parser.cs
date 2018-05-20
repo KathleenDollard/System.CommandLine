@@ -19,6 +19,7 @@ namespace System.CommandLine
         }
 
         internal ParserConfiguration Configuration { get; }
+        internal SymbolDefinitionSet SymbolDefinitions { get; }
 
         public virtual ParseResult Parse(IReadOnlyCollection<string> rawTokens, string rawInput = null)
         {
@@ -29,6 +30,8 @@ namespace System.CommandLine
             var unmatchedTokens = new List<string>();
             Command rootCommand = null;
             Command innermostCommand = null;
+
+            var optionQueue = GatherOptions(SymbolDefinitions).ToList();
 
             while (unparsedTokens.Any())
             {
@@ -80,12 +83,38 @@ namespace System.CommandLine
                         }
 
                         added = true;
+                        if (token.Type is TokenType.Option)
+                        {
+                            var existing = optionQueue.FirstOrDefault(name => name == symbolForToken.Name);
+                            if (existing != null)
+                            {
+                                // we've used this option - don't use it again
+                                optionQueue.Remove(existing);
+                            }
+                        }
                         break;
                     }
 
                     if (token.Type == TokenType.Argument &&
                         symbol.SymbolDefinition is CommandDefinition)
                     {
+                        var optionName = optionQueue.FirstOrDefault();
+                        if (optionName != null)
+                        {
+                            optionQueue.RemoveAt(0);
+                            var newToken = new Token("-" + optionName, TokenType.Option);
+                            symbolForToken = symbol.TryTakeToken(newToken);
+                            if (symbolForToken != null)
+                            {
+                                allSymbols.Add(symbolForToken);
+                                symbolForToken = symbol.TryTakeToken(token);
+                                if (symbolForToken != null)
+                                {
+                                    allSymbols.Add(symbolForToken);
+                                    added = true;
+                                }
+                            }
+                        }
                         break;
                     }
                 }
@@ -110,6 +139,29 @@ namespace System.CommandLine
                 unmatchedTokens,
                 errors,
                 rawInput);
+        }
+
+        private IEnumerable<string> GatherOptions(SymbolDefinitionSet symbolDefinitions)
+        {
+            var optionList = new List<string>();
+            foreach (var symDef in symbolDefinitions) //.Where( s => s is OptionDefinition))
+            {
+                if (symDef is OptionDefinition)
+                {
+                    var validator = symDef.ArgumentDefinition.SymbolValidators.FirstOrDefault();
+                    if (validator != null)
+                    {
+                        if (validator.Method.Name.Contains("ExactlyOne"))
+                        {
+                            optionList.Add(symDef.Name);
+                        }
+                    }
+                }
+
+                optionList.AddRange(GatherOptions(symDef.SymbolDefinitions));
+            }
+
+            return optionList;
         }
 
         internal IReadOnlyCollection<string> NormalizeRootCommand(IReadOnlyCollection<string> args)
