@@ -16,10 +16,7 @@ namespace System.CommandLine.Pineapple
 
         public int Run(string args)
         {
-            ParserConfiguration configuration = new ParserConfiguration(
-                Actions.Keys.Select(item => item.BuildCommandDefinition()).Cast<SymbolDefinition>().ToList().AsReadOnly());
-
-            var parser = new Parser(configuration);
+            var parser = GetParser();
 
             ParseResult result = parser.Parse(args);
 
@@ -34,6 +31,14 @@ namespace System.CommandLine.Pineapple
             ParameterInfo[] parameters = method.GetParameters();
 
             return (int) method.Invoke(null, parameters.Select(item => command[item.Name]).ToArray());
+        }
+
+        public Parser GetParser()
+        {
+            ParserConfiguration configuration = new ParserConfiguration(
+                Actions.Keys.Select(item => item.BuildCommandDefinition()).Cast<SymbolDefinition>().ToList().AsReadOnly());
+
+            return new Parser(configuration);
         }
 
         private static int DefaultParseErrorHandler(ParseResult result)
