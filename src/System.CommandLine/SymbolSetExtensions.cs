@@ -12,5 +12,6 @@ namespace System.CommandLine
                    .Select(a => a.SymbolDefinition)
                    .OfType<CommandDefinition>()
                    .LastOrDefault();
+                   //.FirstOrDefault();
     }
 }
