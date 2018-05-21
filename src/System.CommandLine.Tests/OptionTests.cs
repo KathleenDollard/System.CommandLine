@@ -232,8 +232,8 @@ namespace System.CommandLine.Tests
             result.ValueForOption("-a").Should().Be("value-for-a");
             result.ValueForOption("-c").Should().Be("value-for-c");
             result.HasOption("-b").Should().BeTrue();
-            //result.Symbols.ElementAt(0).Name.Should().Be("outer");
+            //result.Command().Children.Should().ContainSingle(x => x.Name == "outer" && x is Command);
         }
-
     }
 }
+
