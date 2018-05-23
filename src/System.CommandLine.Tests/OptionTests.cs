@@ -136,7 +136,7 @@ namespace System.CommandLine.Tests
         public void Raw_aliases_are_exposed_by_an_option()
         {
             var option = new OptionDefinition(
-                new[] {"-h", "--help", "/?"},
+                new[] { "-h", "--help", "/?" },
                 "");
 
             option.RawAliases
@@ -161,5 +161,40 @@ namespace System.CommandLine.Tests
             result.ValueForOption(prefix + "c").Should().Be("value-for-c");
             result.HasOption(prefix + "b").Should().BeFalse();
         }
-   }
+
+        [Fact]
+        public void Option_arguments_separated_by_commas_are_valid()
+        {
+            var result = new ParserBuilder()
+                    .AddOption("-a", "", a => a.ExactlyOne())
+                    .Build()
+                    .Parse("-a value_1, value_2");
+
+            result.ValueForOption("-a").Should().Be(new[] { "value_1", "value_2" });
+        }
+
+        [Fact]
+        public void Multiple_option_arguments_separated_by_commas_are_valid()
+        {
+            var result = new ParserBuilder()
+                    .AddOption("-a", "", a => a.ExactlyOne())
+                    .Build()
+                    .Parse("-a value_1, value_2 -b value_A, value_B");
+
+            result.ValueForOption("-a").Should().Be(new[] { "value_1", "value_2" });
+            result.ValueForOption("-b").Should().Be(new[] { "value_A", "value_B" });
+        }
+
+        [Fact]
+        public void Spaces_around_commas_for_option_arguments_are_valid()
+        {
+            var result = new ParserBuilder()
+                    .AddOption("-a", "", a => a.ExactlyOne())
+                    .Build()
+                    .Parse("-a value_1 , value_2 -b value_A,value_B");
+
+            result.ValueForOption("-a").Should().Be(new[] { "value_1", "value_2" });
+            result.ValueForOption("-b").Should().Be(new[] { "value_A", "value_B" });
+        }
+    }
 }
