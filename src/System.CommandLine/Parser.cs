@@ -74,6 +74,11 @@ namespace System.CommandLine
                 {
                     var symbolForToken = symbol.TryTakeToken(token);
 
+                    if (allSymbols.Contains(symbolForToken))
+                    {
+                        break;
+                    }
+
                     if (symbolForToken != null)
                     {
                         allSymbols.Add(symbolForToken);
@@ -152,7 +157,8 @@ namespace System.CommandLine
                     var validator = symDef.ArgumentDefinition.SymbolValidators.FirstOrDefault();
                     if (validator != null)
                     {
-                        if (validator.Method.Name.Contains("ExactlyOne"))
+                        if (validator.Method.Name.Contains("ExactlyOne") ||
+                            validator.Method.Name.Contains("LegalFilePathsOnly"))
                         {
                             optionList.Add(symDef.Name);
                         }
