@@ -222,12 +222,12 @@ namespace System.CommandLine.Tests
         public void When_multiple_option_arguments_are_provided_with_b_option_positions_are_assumed()
         {
             var result = new ParserBuilder()
-                //.AddCommand("outer", "")
+                .AddCommand("outer", "")
                 .AddOption("-a", "", a => a.ExactlyOne())
                 .AddOption("-b", "")
                 .AddOption("-c", "", a => a.ExactlyOne())
                 .Build()
-                .Parse("-c value-for-c -b outer value-for-a");
+                .Parse("-c value-for-c -b value-for-a outer");
 
             result.ValueForOption("-a").Should().Be("value-for-a");
             result.ValueForOption("-c").Should().Be("value-for-c");

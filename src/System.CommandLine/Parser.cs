@@ -1,3 +1,4 @@
+//#define TGFAdded
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
@@ -29,8 +30,18 @@ namespace System.CommandLine
             var allSymbols = new List<Symbol>();
             var errors = new List<ParseError>(lexResult.Errors);
             var unmatchedTokens = new List<string>();
+            //Dictionary<string,Command> rootCommands = new Dictionary<string, Command>();
             Command rootCommand = null;
             Command innermostCommand = null;
+            //var forceRootCommand = false;
+
+
+            /*
+             * Each option needs to know which command it belongs to
+             * Once a new command is encountered, missing previous options should be discarded or defaulted
+             * Then options toward the next command can be assumed as needed
+             */
+
 
             var optionQueue = GatherOptions(Configuration.SymbolDefinitions).ToList();
 
@@ -59,7 +70,8 @@ namespace System.CommandLine
                         {
                             symbol = Symbol.Create(symbolDefinition, token.Value, validationMessages: Configuration.ValidationMessages);
 
-                            rootCommand = (Command) symbol;
+                            //rootCommands.Add(token.Value, (Command)symbol);
+                            rootCommand = (Command)symbol;
                         }
 
                         allSymbols.Add(symbol);
@@ -73,11 +85,6 @@ namespace System.CommandLine
                 foreach (var symbol in Enumerable.Reverse(allSymbols))
                 {
                     var symbolForToken = symbol.TryTakeToken(token);
-
-                    if (allSymbols.Contains(symbolForToken))
-                    {
-                        break;
-                    }
 
                     if (symbolForToken != null)
                     {
@@ -108,18 +115,18 @@ namespace System.CommandLine
                         if (optionName != null)
                         {
                             optionQueue.RemoveAt(0);
+                            //#if TGFAdded
                             var newToken = new Token("-" + optionName, TokenType.Option);
                             symbolForToken = symbol.TryTakeToken(newToken);
-                            if (symbolForToken != null)
+                            var nextSymbolForToken = symbolForToken?.TryTakeToken(token);
+                            if (nextSymbolForToken != null)
                             {
                                 allSymbols.Add(symbolForToken);
-                                symbolForToken = symbol.TryTakeToken(token);
-                                if (symbolForToken != null)
-                                {
-                                    allSymbols.Add(symbolForToken);
-                                    added = true;
-                                }
+                                allSymbols.Add(nextSymbolForToken);
+                                added = true;
+                                //forceRootCommand = true;
                             }
+                            //#endif
                         }
                         break;
                     }
@@ -137,7 +144,14 @@ namespace System.CommandLine
                     unmatchedTokens.Select(token => new ParseError(Configuration.ValidationMessages.UnrecognizedCommandOrArgument(token))));
             }
 
+            /*
+             * It seems like what we need is to establish a different root command for options before
+             * a command and options after a command or after each command
+             */
+            //innermostCommand = forceRootCommand ? rootCommand : innermostCommand;
+
             return new ParseResult(
+                //rootCommands,
                 rootCommand,
                 innermostCommand ?? rootCommand,
                 rawTokens,
@@ -170,29 +184,6 @@ namespace System.CommandLine
 
             return optionList;
         }
-
-        //internal IReadOnlyCollection<string> NormalizeRootCommand(IReadOnlyCollection<string> args)
-        //{
-        //   var optionList = new List<string>();
-        //  foreach (var symDef in symbolDefinitions) //.Where( s => s is OptionDefinition))
-        //    {
-        //        if (symDef is OptionDefinition)
-        //        {
-        //            var validator = symDef.ArgumentDefinition.SymbolValidators.FirstOrDefault();
-        //            if (validator != null)
-        //            {
-        //                if (validator.Method.Name.Contains("ExactlyOne"))
-        //                {
-        //                    optionList.Add(symDef.Name);
-        //                }
-        //            }
-        //        }
-        //
-        //        optionList.AddRange(GatherOptions(symDef.SymbolDefinitions));
-        //    }
-        //
-        //    return optionList;
-        //}
 
         internal IReadOnlyCollection<string> NormalizeRootCommand(IReadOnlyCollection<string> args)
         {

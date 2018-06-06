@@ -205,10 +205,9 @@ namespace System.CommandLine.Tests
             var command = new CommandDefinitionBuilder("outer")
                           .AddCommand("inner", "",
                                       inner => inner.AddCommand("inner-er", ""))
-                          .AddCommand("extra")
                           .BuildCommandDefinition();
 
-            var result = command.Parse("outer inner arg extra");
+            var result = command.Parse("outer inner arg");
 
             result.Errors
                   .Should()
