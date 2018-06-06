@@ -21,14 +21,18 @@ namespace System.CommandLine
 
             ArgumentParseResult result = symbol.Result;
 
-            if (result != null &&
-                result.IsSuccessful)
+            if (result is SuccessfulArgumentParseResult successfulResult)
             {
+                if (!successfulResult.HasValue)
+                {
+                    return default(T);
+                }
+
                 object value = ((dynamic)symbol.Result).Value;
 
                 switch (value)
                 {
-                    // the parser configuration specifies a type conversion
+                    // the configuration specifies a type conversion
                     case T alreadyConverted:
                         return alreadyConverted;
 
@@ -51,10 +55,11 @@ namespace System.CommandLine
                             return (dynamic)true;
                         }
 
-                        break;
+                        return default(T);
                 }
 
-                if (result.IsSuccessful)
+                if (result is SuccessfulArgumentParseResult success &&
+                    success.HasValue)
                 {
                     value = ((dynamic)result).Value;
                 }
@@ -70,19 +75,7 @@ namespace System.CommandLine
                 throw new InvalidOperationException(failed.ErrorMessage);
             }
 
-            string message = null;
-
-            switch (symbol)
-            {
-                case Command command:
-                    message = symbol.ValidationMessages.RequiredArgumentMissingForCommand(command.Definition);
-                    break;
-                case Option option:
-                    message = symbol.ValidationMessages.RequiredArgumentMissingForOption(option.Definition);
-                    break;
-            }
-
-            throw new InvalidOperationException(message);
+            throw new InvalidOperationException(symbol.ValidationMessages.RequiredArgumentMissing(symbol));
         }
 
         internal static IEnumerable<Symbol> AllSymbols(

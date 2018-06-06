@@ -24,7 +24,7 @@ namespace System.CommandLine.Tests
                 new OptionDefinition(
                     "-x",
                     "",
-                    argumentDefinition: builder.FromAmong("this", "that", "the-other-thing").ExactlyOne()));
+                    builder.FromAmong("this", "that", "the-other-thing").ExactlyOne()));
 
             var result = parser.Parse("-x none-of-those");
 
@@ -40,7 +40,7 @@ namespace System.CommandLine.Tests
             var option = new OptionDefinition(
                 "-x",
                 "",
-                argumentDefinition: builder.FromAmong("this", "that").ExactlyOne());
+                builder.FromAmong("this", "that").ExactlyOne());
 
             var parser = new Parser(option);
 
@@ -59,7 +59,7 @@ namespace System.CommandLine.Tests
             var parser = new Parser(new OptionDefinition(
                                         "-x",
                                         "",
-                                        argumentDefinition: builder.ExactlyOne()));
+                                        builder.ExactlyOne()));
 
             var result = parser.Parse("-x");
 
@@ -72,10 +72,7 @@ namespace System.CommandLine.Tests
         public void When_no_option_accepts_arguments_but_one_is_supplied_then_an_error_is_returned()
         {
             var parser = new Parser(new CommandDefinition("the-command", "", new[] {
-                new OptionDefinition(
-                    "-x",
-                    "",
-                    argumentDefinition: ArgumentDefinition.None)
+                new OptionDefinition("-x", "")
             }));
 
             var result = parser.Parse("the-command -x some-arg");
@@ -103,14 +100,8 @@ namespace System.CommandLine.Tests
             });
 
             var command = new CommandDefinition("the-command", "", new[] {
-                new OptionDefinition(
-                    "--one",
-                    "",
-                    argumentDefinition: null),
-                new OptionDefinition(
-                    "--two",
-                    "",
-                    argumentDefinition: null)
+                new OptionDefinition("--one", ""),
+                new OptionDefinition("--two", "")
             }, builder.ExactlyOne());
 
             var result = command.Parse("the-command --one --two");
@@ -126,12 +117,12 @@ namespace System.CommandLine.Tests
         public void LegalFilePathsOnly_rejects_arguments_containing_invalid_path_characters()
         {
             var builder = new ArgumentDefinitionBuilder();
-            var command = new CommandDefinition("the-command", "", symbolDefinitions: null, argumentDefinition: builder.LegalFilePathsOnly().ZeroOrMore());
+            var command = new CommandDefinition("the-command", "", builder.LegalFilePathsOnly().ZeroOrMore());
 
             var invalidCharacters = $"|{Path.GetInvalidPathChars().First()}|";
 
             // Convert to ushort so the xUnit XML writer doesn't complain about invalid characters
-            _output.WriteLine(string.Join("\n", Path.GetInvalidPathChars().Select((c) => (ushort)(c))));
+            _output.WriteLine(string.Join("\n", Path.GetInvalidPathChars().Select(c => (ushort)c)));
 
             var result = command.Parse($"the-command {invalidCharacters}");
 
@@ -144,7 +135,7 @@ namespace System.CommandLine.Tests
         public void LegalFilePathsOnly_accepts_arguments_containing_valid_path_characters()
         {
             var builder = new ArgumentDefinitionBuilder();
-            var command = new CommandDefinition("the-command", "", symbolDefinitions: null, argumentDefinition: builder.LegalFilePathsOnly().ZeroOrMore());
+            var command = new CommandDefinition("the-command", "", builder.LegalFilePathsOnly().ZeroOrMore());
 
             var validPathName = Directory.GetCurrentDirectory();
             var validNonExistingFileName = Path.Combine(validPathName, Guid.NewGuid().ToString());
@@ -175,7 +166,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void An_argument_can_be_invalid_based_on_directory_existence()
         {
-            var parser = new ParserBuilder()
+            var parser = new CommandLineBuilder()
                          .AddCommand("move", "",
                                      toArgs => toArgs.AddOption("--to", "", args => args.ExactlyOne()),
                                      moveArgs => moveArgs.ExistingFilesOnly()
@@ -223,7 +214,7 @@ namespace System.CommandLine.Tests
                 new OptionDefinition(
                     "-x",
                     "",
-                    argumentDefinition: new ArgumentDefinitionBuilder().ExactlyOne()));
+                    new ArgumentDefinitionBuilder().ExactlyOne()));
 
             var result = parser.Parse("-x 1 -x 2");
 
@@ -240,7 +231,7 @@ namespace System.CommandLine.Tests
                 new OptionDefinition(
                     "-x",
                     "",
-                    argumentDefinition: new ArgumentDefinitionBuilder().ParseArgumentsAs<int>()));
+                    new ArgumentDefinitionBuilder().ParseArgumentsAs<int>()));
 
             var result = parser.Parse("-x 1 -x 2");
 
@@ -248,6 +239,42 @@ namespace System.CommandLine.Tests
                   .Select(e => e.Message)
                   .Should()
                   .Contain("Option '-x' cannot be specified more than once.");
+        }
+
+        [Fact]
+        public void When_an_option_has_a_default_value_it_is_not_valid_to_specify_the_option_without_an_argument()
+        {
+            var parser = new Parser(
+                new OptionDefinition(
+                    "-x", "",
+                    new ArgumentDefinitionBuilder()
+                        .WithDefaultValue(() => "123")
+                        .ParseArgumentsAs<int>()));
+
+            var result = parser.Parse("-x");
+
+            result.Errors
+                  .Select(e => e.Message)
+                  .Should()
+                  .Contain("Required argument missing for option: -x");
+        }
+
+        [Fact]
+        public void When_an_option_has_a_default_value_then_the_option_token_must_be_applied()
+        {
+            var parser = new Parser(
+                new OptionDefinition(
+                    "-x", "",
+                    new ArgumentDefinitionBuilder()
+                        .WithDefaultValue(() => "123")
+                        .ParseArgumentsAs<int>()));
+
+            var result = parser.Parse("456");
+
+            result.Errors
+                  .Select(e => e.Message)
+                  .Should()
+                  .ContainSingle("Unrecognized command or argument '456'");
         }
 
         [Theory]

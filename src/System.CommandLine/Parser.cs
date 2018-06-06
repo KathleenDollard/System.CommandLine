@@ -1,4 +1,3 @@
-//#define TGFAdded
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
@@ -10,17 +9,16 @@ namespace System.CommandLine
 {
     public class Parser
     {
-        public Parser(ParserConfiguration configuration)
+        public Parser(CommandLineConfiguration configuration)
         {
             Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
-        public Parser(params SymbolDefinition[] symbolDefinitions) : this(new ParserConfiguration(symbolDefinitions))
+        public Parser(params SymbolDefinition[] symbolDefinitions) : this(new CommandLineConfiguration(symbolDefinitions))
         {
         }
 
-        internal ParserConfiguration Configuration { get; }
-        internal SymbolDefinitionSet SymbolDefinitions { get; }
+        internal CommandLineConfiguration Configuration { get; }
 
         public virtual ParseResult Parse(IReadOnlyCollection<string> arguments, string rawInput = null)
         {
@@ -30,11 +28,8 @@ namespace System.CommandLine
             var allSymbols = new List<Symbol>();
             var errors = new List<ParseError>(lexResult.Errors);
             var unmatchedTokens = new List<string>();
-            //Dictionary<string,Command> rootCommands = new Dictionary<string, Command>();
             Command rootCommand = null;
             Command innermostCommand = null;
-            //var forceRootCommand = false;
-
 
             /*
              * Each option needs to know which command it belongs to
@@ -144,14 +139,7 @@ namespace System.CommandLine
                     unmatchedTokens.Select(token => new ParseError(Configuration.ValidationMessages.UnrecognizedCommandOrArgument(token))));
             }
 
-            /*
-             * It seems like what we need is to establish a different root command for options before
-             * a command and options after a command or after each command
-             */
-            //innermostCommand = forceRootCommand ? rootCommand : innermostCommand;
-
             return new ParseResult(
-                //rootCommands,
                 rootCommand,
                 innermostCommand ?? rootCommand,
                 rawTokens,

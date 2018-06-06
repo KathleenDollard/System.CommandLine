@@ -46,8 +46,7 @@ namespace System.CommandLine.Tests
         public void HasAlias_accepts_prefixed_short_value()
         {
             var option = new OptionDefinition(
-                new[] { "-o", "--option" }, "",
-                    ArgumentDefinition.None);
+                new[] { "-o", "--option" }, "");
 
             option.HasAlias("-o").Should().BeTrue();
         }
@@ -56,8 +55,7 @@ namespace System.CommandLine.Tests
         public void HasAlias_accepts_unprefixed_short_value()
         {
             var option = new OptionDefinition(
-                new[] { "-o", "--option" }, "",
-                    ArgumentDefinition.None);
+                new[] { "-o", "--option" }, "");
 
             option.HasAlias("o").Should().BeTrue();
         }
@@ -66,8 +64,7 @@ namespace System.CommandLine.Tests
         public void HasAlias_accepts_prefixed_long_value()
         {
             var option = new OptionDefinition(
-                new[] { "-o", "--option" }, "",
-                    ArgumentDefinition.None);
+                new[] { "-o", "--option" }, "");
 
             option.HasAlias("--option").Should().BeTrue();
         }
@@ -76,8 +73,7 @@ namespace System.CommandLine.Tests
         public void HasAlias_accepts_unprefixed_long_value()
         {
             var option = new OptionDefinition(
-                new[] { "-o", "--option" }, "",
-                ArgumentDefinition.None);
+                new[] { "-o", "--option" }, "");
 
             option.HasAlias("option").Should().BeTrue();
         }
@@ -86,8 +82,7 @@ namespace System.CommandLine.Tests
         public void It_is_not_necessary_to_specify_a_prefix_when_adding_an_option()
         {
             var option = new OptionDefinition(
-                new[] { "o" }, "",
-                ArgumentDefinition.None);
+                new[] { "o" }, "");
 
             option.HasAlias("o").Should().BeTrue();
             option.HasAlias("-o").Should().BeTrue();
@@ -96,7 +91,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void An_option_must_have_at_least_one_alias()
         {
-            Action create = () => new OptionDefinition(Array.Empty<string>(), "", ArgumentDefinition.None);
+            Action create = () => new OptionDefinition(Array.Empty<string>(), "");
 
             create.Should()
                   .Throw<ArgumentException>()
@@ -109,7 +104,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void An_option_cannot_have_an_empty_alias()
         {
-            Action create = () => new OptionDefinition(new[] { "" }, "", ArgumentDefinition.None);
+            Action create = () => new OptionDefinition(new[] { "" }, "");
 
             create.Should()
                   .Throw<ArgumentException>()
@@ -122,7 +117,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void An_option_cannot_have_an_alias_consisting_entirely_of_whitespace()
         {
-            Action create = () => new OptionDefinition(new[] { "  \t" }, "", ArgumentDefinition.None);
+            Action create = () => new OptionDefinition(new[] { "  \t" }, "");
 
             create.Should()
                   .Throw<ArgumentException>()
@@ -147,7 +142,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_option_argument_is_provided_without_option_name_argument_position_is_assumed()
         {
-            var result = new ParserBuilder()
+            var result = new CommandLineBuilder()
                 .AddOption("-a", "", a => a.ExactlyOne())
                 .Build()
                 .Parse("value-for-a");
@@ -158,7 +153,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_multiple_option_arguments_are_provided_without_option_name_argument_positions_are_assumed()
         {
-            var result = new ParserBuilder()
+            var result = new CommandLineBuilder()
                 .AddOption("-a", "", a => a.ExactlyOne())
                 .AddOption("-b", "")
                 .AddOption("-c", "", a => a.ExactlyOne())
@@ -173,7 +168,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_multiple_option_arguments_are_provided_with_first_option_name_argument_positions_are_assumed()
         {
-            var result = new ParserBuilder()
+            var result = new CommandLineBuilder()
                 .AddOption("-a", "", a => a.ExactlyOne())
                 .AddOption("-b", "")
                 .AddOption("-c", "", a => a.ExactlyOne())
@@ -191,7 +186,7 @@ namespace System.CommandLine.Tests
         [InlineData("/")]
         public void When_option_use_differnt_prefixes_they_still_work(string prefix)
         {
-            var result = new ParserBuilder()
+            var result = new CommandLineBuilder()
                 .AddOption(prefix + "a", "", a => a.ExactlyOne())
                 .AddOption(prefix + "b", "")
                 .AddOption(prefix + "c", "", a => a.ExactlyOne())
@@ -206,7 +201,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_multiple_option_arguments_are_provided_with_second_option_is_first_positions_are_assumed()
         {
-            var result = new ParserBuilder()
+            var result = new CommandLineBuilder()
                 .AddOption("-a", "", a => a.ExactlyOne())
                 .AddOption("-b", "")
                 .AddOption("-c", "", a => a.ExactlyOne())
@@ -221,7 +216,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_multiple_option_arguments_are_provided_with_b_option_positions_are_assumed()
         {
-            var result = new ParserBuilder()
+            var result = new CommandLineBuilder()
                 .AddCommand("outer", "")
                 .AddOption("-a", "", a => a.ExactlyOne())
                 .AddOption("-b", "")
@@ -236,4 +231,3 @@ namespace System.CommandLine.Tests
         }
     }
 }
-

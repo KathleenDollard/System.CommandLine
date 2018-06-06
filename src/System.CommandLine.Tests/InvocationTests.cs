@@ -21,9 +21,9 @@ namespace System.CommandLine.Tests
             var wasCalled = false;
 
             var parser =
-                new ParserBuilder()
+                new CommandLineBuilder()
                     .AddCommand("command", "")
-                    .AddMiddleware(_ => wasCalled = true)
+                    .UseMiddleware(_ => wasCalled = true)
                     .Build();
 
             await parser.InvokeAsync("command", _console);
@@ -37,7 +37,7 @@ namespace System.CommandLine.Tests
             var wasCalled = false;
 
             var parser =
-                new ParserBuilder()
+                new CommandLineBuilder()
                     .AddCommand(
                         "command", "",
                         cmd => cmd.OnExecute(() => wasCalled = true))
@@ -61,7 +61,7 @@ namespace System.CommandLine.Tests
             }
 
             var parser =
-                new ParserBuilder()
+                new CommandLineBuilder()
                     .AddCommand(
                         "command", "",
                         cmd => {
@@ -82,7 +82,7 @@ namespace System.CommandLine.Tests
             var wasCalled = false;
 
             var parser =
-                new ParserBuilder()
+                new CommandLineBuilder()
                     .AddCommand(
                         "command", "",
                         cmd => {
@@ -108,16 +108,15 @@ namespace System.CommandLine.Tests
             var wasCalled = false;
 
             var parser =
-                new ParserBuilder()
+                new CommandLineBuilder()
                     .AddCommand(
                         "command", "",
                         cmd => {
-                            cmd
-                                .AddOption("-x", "", args => args.ParseArgumentsAs<int>())
-                                .OnExecute<ParseResult>(result => {
-                                    wasCalled = true;
-                                    result.ValueForOption("-x").Should().Be(123);
-                                });
+                            cmd.AddOption("-x", "", args => args.ParseArgumentsAs<int>())
+                               .OnExecute<ParseResult>(result => {
+                                   wasCalled = true;
+                                   result.ValueForOption("-x").Should().Be(123);
+                               });
                         })
                     .Build();
 
@@ -132,7 +131,7 @@ namespace System.CommandLine.Tests
             var firstWasCalled = false;
             var secondWasCalled = false;
 
-            var parser = new ParserBuilder()
+            var parser = new CommandLineBuilder()
                          .AddCommand("first", "",
                                      cmd => cmd.OnExecute<string>(_ => firstWasCalled = true))
                          .AddCommand("second", "",
@@ -148,9 +147,9 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_middleware_throws_then_InvokeAsync_does_not_handle_the_exception()
         {
-            var parser = new ParserBuilder()
+            var parser = new CommandLineBuilder()
                          .AddCommand("the-command", "")
-                         .AddMiddleware(_ => throw new Exception("oops!"))
+                         .UseMiddleware(_ => throw new Exception("oops!"))
                          .Build();
 
             Func<Task> invoke = async () => await parser.InvokeAsync("the-command", _console);
@@ -163,7 +162,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_command_handler_throws_then_InvokeAsync_does_not_handle_the_exception()
         {
-            var parser = new ParserBuilder()
+            var parser = new CommandLineBuilder()
                          .AddCommand("the-command", "",
                                      cmd => cmd.OnExecute<string>(_ => throw new Exception("oops!")))
                          .Build();
@@ -182,10 +181,10 @@ namespace System.CommandLine.Tests
         [Fact]
         public async Task HandleAndDisplayExceptions_catches_middleware_exceptions_and_writes_details_to_standard_error()
         {
-            var parser = new ParserBuilder()
+            var parser = new CommandLineBuilder()
                          .AddCommand("the-command", "")
-                         .AddMiddleware(_ => throw new Exception("oops!"))
-                         .HandleAndDisplayExceptions()
+                         .UseMiddleware(_ => throw new Exception("oops!"))
+                         .UseExceptionHandler()
                          .Build();
 
             var resultCode = await parser.InvokeAsync("the-command", _console);
@@ -198,10 +197,10 @@ namespace System.CommandLine.Tests
         [Fact]
         public async Task HandleAndDisplayExceptions_catches_command_handler_exceptions_and_writes_details_to_standard_error()
         {
-            var parser = new ParserBuilder()
+            var parser = new CommandLineBuilder()
                          .AddCommand("the-command", "",
                                      cmd => cmd.OnExecute<string>(_ => throw new Exception("oops!")))
-                         .HandleAndDisplayExceptions()
+                         .UseExceptionHandler()
                          .Build();
 
             var resultCode = await parser.InvokeAsync("the-command", _console);
@@ -213,10 +212,10 @@ namespace System.CommandLine.Tests
         [Fact]
         public async Task Declaration_of_HandleAndDisplayExceptions_can_come_before_other_middleware()
         {
-            await new ParserBuilder()
+            await new CommandLineBuilder()
                   .AddCommand("the-command", "")
-                  .HandleAndDisplayExceptions()
-                  .AddMiddleware(_ => throw new Exception("oops!"))
+                  .UseExceptionHandler()
+                  .UseMiddleware(_ => throw new Exception("oops!"))
                   .Build()
                   .InvokeAsync("the-command", _console);
 
@@ -229,10 +228,10 @@ namespace System.CommandLine.Tests
         [Fact]
         public async Task Declaration_of_HandleAndDisplayExceptions_can_come_after_other_middleware()
         {
-            await new ParserBuilder()
+            await new CommandLineBuilder()
                   .AddCommand("the-command", "")
-                  .AddMiddleware(_ => throw new Exception("oops!"))
-                  .HandleAndDisplayExceptions()
+                  .UseMiddleware(_ => throw new Exception("oops!"))
+                  .UseExceptionHandler()
                   .Build()
                   .InvokeAsync("the-command", _console);
 
@@ -247,8 +246,8 @@ namespace System.CommandLine.Tests
         {
             var wasCalled = false;
 
-            var parser = new ParserBuilder()
-                         .AddMiddleware(context => {
+            var parser = new CommandLineBuilder()
+                         .UseMiddleware(context => {
                              var tokensAfterFirst = context.ParseResult.Tokens.Skip(1).ToArray();
                              var reparsed = context.Parser.Parse(tokensAfterFirst);
                              context.ParseResult = reparsed;

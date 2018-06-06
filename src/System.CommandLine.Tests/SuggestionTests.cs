@@ -52,9 +52,9 @@ namespace System.CommandLine.Tests
             var command = new CommandDefinition(
                 "command", "a command",
                 new[] {
-                    new CommandDefinition("one", "subcommand one", ArgumentDefinition.None),
-                    new CommandDefinition("two", "subcommand two", ArgumentDefinition.None),
-                    new CommandDefinition("three", "subcommand three", ArgumentDefinition.None)
+                    new CommandDefinition("one", "subcommand one"),
+                    new CommandDefinition("two", "subcommand two"),
+                    new CommandDefinition("three", "subcommand three")
                 });
 
             var suggestions = command.Suggest(command.Parse("command "));
@@ -68,7 +68,7 @@ namespace System.CommandLine.Tests
             var command = new CommandDefinition(
                 "command", "a command",
                 new SymbolDefinition[] {
-                    new CommandDefinition("subcommand", "subcommand", ArgumentDefinition.None),
+                    new CommandDefinition("subcommand", "subcommand"),
                     new OptionDefinition("--option", "option")
                 });
 
@@ -83,7 +83,7 @@ namespace System.CommandLine.Tests
             var command = new CommandDefinition(
                 "command", "a command",
                 new SymbolDefinition[] {
-                    new CommandDefinition("subcommand", "subcommand", ArgumentDefinition.None),
+                    new CommandDefinition("subcommand", "subcommand"),
 
                     new OptionDefinition("--option", "option")
                 },
@@ -100,7 +100,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_an_option_has_a_default_value_it_will_still_be_suggested()
         {
-            var parser = new ParserBuilder()
+            var parser = new CommandLineBuilder()
                          .AddOption("--apple", "kinds of apples", args => args.WithDefaultValue(() => "grannysmith"))
                          .AddOption("--banana", "kinds of bananas")
                          .AddOption("--cherry", "kinds of cherries")
@@ -122,7 +122,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_one_option_has_been_specified_then_it_and_its_siblings_will_still_be_suggested()
         {
-            var parser = new ParserBuilder()
+            var parser = new CommandLineBuilder()
                          .AddOption("--apple", "kinds of apples")
                          .AddOption("--banana", "kinds of bananas")
                          .AddOption("--cherry", "kinds of cherries")
@@ -139,6 +139,27 @@ namespace System.CommandLine.Tests
                   .BeEquivalentTo("--apple",
                                   "--banana",
                                   "--cherry");
+        }
+
+        [Fact]
+        public void When_one_option_has_been_partially_specified_then_nonmatching_siblings_will_not_be_suggested()
+        {
+            var parser = new CommandLineBuilder()
+                         .AddOption("--apple", "kinds of apples")
+                         .AddOption("--banana", "kinds of bananas")
+                         .AddOption("--cherry", "kinds of cherries")
+                         .Build();
+
+            var result = parser.Parse("a");
+
+            _output.WriteLine(result.ToString());
+
+            _output.WriteLine(string.Join(Environment.NewLine, result.Suggestions()));
+
+            result.Suggestions()
+                  .Should()
+                  .BeEquivalentTo("--apple",
+                                  "--banana");
         }
 
         [Fact]
@@ -190,8 +211,8 @@ namespace System.CommandLine.Tests
             var command = new CommandDefinition(
                 "test", "",
                 new[] {
-                    new CommandDefinition("one", "Command one", ArgumentDefinition.None),
-                    new CommandDefinition("two", "Command two", ArgumentDefinition.None)
+                    new CommandDefinition("one", "Command one"),
+                    new CommandDefinition("two", "Command two")
                 },
                 new ArgumentDefinitionBuilder().ExactlyOne());
 
@@ -207,7 +228,7 @@ namespace System.CommandLine.Tests
             var command = new CommandDefinition(
                 "test", "",
                 new SymbolDefinition[] {
-                    new CommandDefinition("one", "Command one", ArgumentDefinition.None),
+                    new CommandDefinition("one", "Command one"),
                     new OptionDefinition("--one", "Option one")
                 }, new ArgumentDefinitionBuilder().ExactlyOne());
 
@@ -278,9 +299,9 @@ namespace System.CommandLine.Tests
                 new CommandDefinition(
                     "outer", "",
                     new[] {
-                        new CommandDefinition("one", "Command one",                                              ArgumentDefinition.None),
-                        new CommandDefinition("two", "Command two",                                              ArgumentDefinition.None),
-                        new CommandDefinition("three", "Command three",                                              ArgumentDefinition.None)
+                        new CommandDefinition("one", "Command one"),
+                        new CommandDefinition("two", "Command two"),
+                        new CommandDefinition("three", "Command three")
                     }));
 
             ParseResult result = parser.Parse("outer o");
@@ -335,7 +356,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_caller_does_the_tokenizing_then_argument_suggestions_are_based_on_the_proximate_option()
         {
-            var parser = new ParserBuilder()
+            var parser = new CommandLineBuilder()
                          .AddCommand(
                              "outer", "",
                              outer => outer.AddOption(
@@ -362,7 +383,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_caller_does_not_do_the_tokenizing_then_argument_suggestions_are_based_on_the_proximate_option()
         {
-            var parser = new ParserBuilder()
+            var parser = new CommandLineBuilder()
                          .AddCommand(
                              "outer", "",
                              outer => outer.AddOption(
@@ -389,7 +410,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_caller_does_the_tokenizing_then_argument_suggestions_are_based_on_the_proximate_command()
         {
-            var parser = new ParserBuilder()
+            var parser = new CommandLineBuilder()
                          .AddCommand(
                              "outer", "",
                              outer => outer.AddCommand(
@@ -416,7 +437,7 @@ namespace System.CommandLine.Tests
         [Fact]
         public void When_caller_does_not_do_the_tokenizing_then_argument_suggestions_are_based_on_the_proximate_command()
         {
-            var parser = new ParserBuilder()
+            var parser = new CommandLineBuilder()
                          .AddCommand(
                              "outer", "",
                              outer => outer.AddCommand(
