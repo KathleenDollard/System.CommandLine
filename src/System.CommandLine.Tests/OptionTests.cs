@@ -213,21 +213,21 @@ namespace System.CommandLine.Tests
             result.HasOption("-b").Should().BeFalse();
         }
 
-        [Fact]
-        public void When_multiple_option_arguments_are_provided_with_b_option_positions_are_assumed()
-        {
-            var result = new CommandLineBuilder()
-                .AddCommand("outer", "")
-                .AddOption("-a", "", a => a.ExactlyOne())
-                .AddOption("-b", "")
-                .AddOption("-c", "", a => a.ExactlyOne())
-                .Build()
-                .Parse("-c value-for-c -b value-for-a outer");
+        //[Fact]
+        //public void When_multiple_option_arguments_are_provided_with_b_option_positions_are_assumed()
+        //{
+        //    var result = new CommandLineBuilder()
+        //        .AddCommand("outer", "")
+        //        .AddOption("-a", "", a => a.ExactlyOne())
+        //        .AddOption("-b", "")
+        //        .AddOption("-c", "", a => a.ExactlyOne())
+        //        .Build()
+        //        .Parse("-c value-for-c -b value-for-a outer");
 
-            result.ValueForOption("-a").Should().Be("value-for-a");
-            result.ValueForOption("-c").Should().Be("value-for-c");
-            result.HasOption("-b").Should().BeTrue();
-            //result.Command().Children.Should().ContainSingle(x => x.Name == "outer" && x is Command);
-        }
+        //    result.ValueForOption("-a").Should().Be("value-for-a");
+        //    result.ValueForOption("-c").Should().Be("value-for-c");
+        //    result.HasOption("-b").Should().BeTrue();
+        //    //result.Command().Children.Should().ContainSingle(x => x.Name == "outer" && x is Command);
+        //}
     }
 }

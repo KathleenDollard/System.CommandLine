@@ -93,7 +93,7 @@ namespace System.CommandLine
                         added = true;
                         if (token.Type is TokenType.Option)
                         {
-                            var existing = optionQueue.FirstOrDefault(name => name == symbolForToken.Name);
+                            var existing = optionQueue.FirstOrDefault(symdef => symdef.Name == symbolForToken.Name);
                             if (existing != null)
                             {
                                 // we've used this option - don't use it again
@@ -106,22 +106,23 @@ namespace System.CommandLine
                     if (token.Type == TokenType.Argument &&
                         symbol.SymbolDefinition is CommandDefinition)
                     {
-                        var optionName = optionQueue.FirstOrDefault();
-                        if (optionName != null)
+                        var optionSymdef = optionQueue.FirstOrDefault();
+                        if (optionSymdef != null)
                         {
-                            optionQueue.RemoveAt(0);
-                            //#if TGFAdded
-                            var newToken = new Token("-" + optionName, TokenType.Option);
-                            symbolForToken = symbol.TryTakeToken(newToken);
-                            var nextSymbolForToken = symbolForToken?.TryTakeToken(token);
-                            if (nextSymbolForToken != null)
+                            if (optionSymdef.ArgumentDefinition.HasDefaultValue &&
+                                optionSymdef.ArgumentDefinition.GetDefaultValue().ToString() == token.Value)
                             {
-                                allSymbols.Add(symbolForToken);
-                                allSymbols.Add(nextSymbolForToken);
-                                added = true;
-                                //forceRootCommand = true;
+                                optionQueue.RemoveAt(0);
+                                var newToken = new Token("-" + optionSymdef.Name, TokenType.Option);
+                                symbolForToken = symbol.TryTakeToken(newToken);
+                                var nextSymbolForToken = symbolForToken?.TryTakeToken(token);
+                                if (nextSymbolForToken != null)
+                                {
+                                    allSymbols.Add(symbolForToken);
+                                    allSymbols.Add(nextSymbolForToken);
+                                    added = true;
+                                }
                             }
-                            //#endif
                         }
                         break;
                     }
@@ -149,27 +150,23 @@ namespace System.CommandLine
                 rawInput);
         }
 
-        private IEnumerable<string> GatherOptions(SymbolDefinitionSet symbolDefinitions)
+        private IEnumerable<SymbolDefinition> GatherOptions(SymbolDefinitionSet symbolDefinitions)
         {
-            var optionList = new List<string>();
+            var optionList = new List<SymbolDefinition>();
             foreach (var symDef in symbolDefinitions) //.Where( s => s is OptionDefinition))
             {
                 if (symDef is OptionDefinition)
                 {
-                    var validator = symDef.ArgumentDefinition.SymbolValidators.FirstOrDefault();
-                    if (validator != null)
+                    var validator = symDef.ArgumentDefinition.Parser.ArityValidator;
+                    if (validator?.MaximumNumberOfArguments == 1 &&
+                        validator.MinimumNumberOfArguments == 1)    // Exactly One
                     {
-                        if (validator.Method.Name.Contains("ExactlyOne") ||
-                            validator.Method.Name.Contains("LegalFilePathsOnly"))
-                        {
-                            optionList.Add(symDef.Name);
-                        }
+                        optionList.Add(symDef);
                     }
                 }
 
                 optionList.AddRange(GatherOptions(symDef.SymbolDefinitions));
             }
-
             return optionList;
         }
 
