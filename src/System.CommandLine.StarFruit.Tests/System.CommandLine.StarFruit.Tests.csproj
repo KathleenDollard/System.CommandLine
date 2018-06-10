@@ -14,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\System.CommandLine.Common\System.CommandLine.Common.csproj" />
     <ProjectReference Include="..\System.CommandLine\System.CommandLine.csproj" />
     <ProjectReference Include="..\System.CommandLine.StarFruit\System.CommandLine.StarFruit.csproj" />
   </ItemGroup>

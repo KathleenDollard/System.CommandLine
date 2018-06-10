@@ -9,21 +9,21 @@ namespace System.CommandLine
 {
     // KAD: Command questions:
     //    Why was aliases on Symbol. Do commands have aliases?
+    //    How does a Token differ from a name? I kept it, but conflated values.
 
     // Exactly like Command, except different constructor to aid in learning
 
     public static class CommandExtensions
     {
-        internal static TCmd AddArgument<TCmd, T,TArg>(this TCmd command, TArg argument)
-            where TCmd : Command<T, TArg>
-            where TArg : BaseArgument<T>
+        internal static TCmd AddArgument<TCmd, T>(this TCmd command, ArgumentList<T> argument)
+            where TCmd : Command<T>
         {
             argument.Parent = command;
             command.Argument = argument;
             return command;
         }
 
-        internal static TCmd AddSubParts<TCmd>(this TCmd command, BaseSymbolPart[] subParts)
+        internal static TCmd AddSubParts<TCmd>(this TCmd command, BasePart[] subParts)
             where TCmd : Command
         {
             foreach (var part in subParts)
@@ -34,7 +34,7 @@ namespace System.CommandLine
             return command;
         }
 
-        internal static void AddPart<TCmd>(this TCmd command, BaseSymbolPart part)
+        internal static void AddPart<TCmd>(this TCmd command, BasePart part)
             where TCmd : Command
         {
             part.Parent = command;
@@ -60,22 +60,21 @@ namespace System.CommandLine
         public static CommandLine Create(string help = null)
          => new CommandLine(help);
 
-        public static CommandLine Create(params BaseSymbolPart[] subParts)
+        public static CommandLine Create(params BasePart[] subParts)
             => Create(default, subParts);
 
-        public static new CommandLine Create(string help, params BaseSymbolPart[] subParts)
+        public static new CommandLine Create(string help, params BasePart[] subParts)
             => Create(help)
                .AddSubParts(subParts);
     }
 
-    public class CommandLine<T, TArg> : Command<T, TArg>
-         where TArg : BaseArgument<T>
+    public class CommandLine<T> : Command<T>
     {
-        public CommandLine(string help = null) : base("", help)
+        public CommandLine(string help = null) : base("", help, new string[] { }, Arity.Many.Default)
         { }
     }
 
-    public class Command : BaseSymbolPart, ICanParent
+    public class Command : BaseSymbolPart<Command>, ICanParent
     {
         internal Command(string name, string help = default) : base(name, help)
         { }
@@ -103,6 +102,7 @@ namespace System.CommandLine
 
         }
 
+        // I'm wondering whether these are an inherent part of the definition or part of parsing. 
         public bool? TreatUnmatchedTokensAsErrors { get; }
         internal MethodBinder ExecutionHandler { get; }
 
@@ -118,23 +118,24 @@ namespace System.CommandLine
         public static Command Create(string name, string help = null)
             => new Command(name, help);
 
-        public Command AddCommand(string name, string help = null, params BaseSymbolPart[] subParts)
-            => AddCommand(Create(name, help, subParts));
+        //public Command AddCommand(string name, string help = null, params BaseSymbolPart[] subParts)
+        //    => AddCommand(Create(name, help, subParts));
 
-        public static Command Create(string name, params BaseSymbolPart[] subParts)
-            => Create(name, (string)null, subParts);
+        public static Command Create(string name, params BasePart[] subParts)
+            => new Command(name)
+              .AddSubParts(subParts);
 
-        public static Command Create(string name, string help, params BaseSymbolPart[] subParts)
-            => Create(name, help)
+        public static Command Create(string name, string help, params BasePart[] subParts)
+            => new Command(name, help)
                .AddSubParts(subParts);
 
-        public static Command Create<T>(string name, BaseArgument<T> argument, params BaseSymbolPart[] subParts)
-            => Create(name, null, argument, subParts);
+        public static Command Create<T>(string name, ArgumentList<T> argument, params BasePart[] subParts)
+            => new Command<T>(name,default, default, argument)
+              .AddSubParts(subParts);
 
-        public static Command Create<T>(string name, string help, BaseArgument<T> argument, params BaseSymbolPart[] subParts)
-            => Create(name, help)
-               .AddSubParts(subParts)
-               .AddArgument(argument);
+        public static Command Create<T>(string name, string help, ArgumentList<T> argument, params BasePart[] subParts)
+           => new Command<T>(name, help, default, argument)
+               .AddSubParts(subParts);
 
         public class CommandResult : BaseResult
         {
@@ -142,25 +143,47 @@ namespace System.CommandLine
             public CommandCollection CalledCommands { get; } = new CommandCollection();
             public Option.OptionCollection CalledOptions { get; } = new Option.OptionCollection();
         }
+
+        protected override void AcceptChildren(IVisitor<Command> visitor)
+        {
+            foreach(var command in Commands)
+            { command.Accept(visitor); }
+            if (visitor is IVisitorStart<Option> optionVisitor )
+            foreach (var option in Options)
+            { option.Accept(optionVisitor); }
+        }
+
     }
 
-    public class Command<T, TArg> : Command, IHasArgument
-        where TArg : BaseArgument<T>
+    public class Command<T> : Command, IHasArgument 
     {
-        internal Command(string name, string help = default)
-            : base(name, help)
-        { }
-
-        internal Command(string name, string help = default, string[] aliases = default, Arity.Many arity = default)
+        internal Command(string name, string help, string[] aliases, Arity arity)
             : base(name, help)
             =>
             // OK, this is ugly. Get someone to explain why I need this. 
-            Argument = (TArg)(BaseArgument<T>)System.CommandLine.Argument.Create<T>(arity: arity);
+            Argument = ArgumentList.Create<T>(arity: arity);
 
-        public TArg Argument { get; internal set; }
+        internal Command(string name, string help, string[] aliases, ArgumentList<T> argument)
+            : base(name, help)
+            =>
+            // OK, this is ugly. Get someone to explain why I need this. 
+            Argument = argument;
 
-        public BaseArgument BaseArgument
+        public ArgumentList<T> Argument { get; internal set; }
+
+        ArgumentList IHasArgument.Argument
             => Argument;
+
+
+        protected override void AcceptChildren(IVisitor<Command> visitor)
+        {
+            if (visitor is IVisitorStart<ArgumentList> argumentVisitor)
+            {
+                Argument.Accept(argumentVisitor);
+            }
+            base.AcceptChildren(visitor);
+        }
+
     }
 
 

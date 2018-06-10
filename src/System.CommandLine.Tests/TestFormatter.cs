@@ -12,9 +12,9 @@ namespace System.CommandLine.Formatters
 
         public string Parse(Command command)
         {
-            var ret = $"\r\n{Spaces(_i)} [ {command.Name} {ParseArgument(command)} ";
+            var ret = $"\r\n{Spaces(_i)} [ {command.Name}";
             _i += 5;
-            ret += Parse(command.Options) + Parse(command.Commands) + " ]";
+            ret += ParseArgument(command) + Parse(command.Options) + Parse(command.Commands) + " ]";
             _i -= 5;
             return ret;
         }
@@ -24,7 +24,7 @@ namespace System.CommandLine.Formatters
 
         private object ParseArgument(Command command)
             => command is IHasArgument commandWithArg
-                ? Parse(commandWithArg.BaseArgument)
+                ? Parse(commandWithArg.Argument)
                 : null;
 
         public string Parse(IEnumerable<Option> options)
@@ -40,8 +40,8 @@ namespace System.CommandLine.Formatters
                ? $"\r\n{Spaces(_i)}subCommands: { string.Join(", ", commands.Select(c => Parse(c)))}"
                : null;
 
-        public string Parse(BaseArgument argument)
-            => $"args: { argument.Name } ";
+        public string Parse(ArgumentList argument)
+            => $"\r\n{Spaces(_i)}args: { argument.Name } ";
 
     }
 }

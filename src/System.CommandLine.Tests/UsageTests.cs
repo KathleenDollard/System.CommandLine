@@ -8,16 +8,16 @@ namespace System.CommandLine.Tests
         private readonly Command _command =
             CommandLine.Create("",
                Command.Create("the-command", "help!",
-                    Argument.Create("arg1", arity: Arity.OneOrMore),
+                    ArgumentList.Create(arity: Arity.OneOrMore, "arg1"),
                     Option.Create("opt1"),
                     Option.Create<int>("opt2", "help me!"),
-                    Option.Create<int>("opt3", "", arity: Arity.ExactlyOne),
-                    Option.Create("opt4", "", Argument.Create("opt_arg", arity: Arity.ExactlyOne, defaultValue: 0)),
-                    Option.Create("opt5", "", Argument.Create<int>("opt_arg", arity: Arity.ZeroOrMore)),
+                    Option.Create<int>(arity: Arity.ExactlyOne, "opt3", ""),
+                    Option.Create("opt4", "", argument: ArgumentList.Create(arity: Arity.ExactlyOne, "opt_arg1", defaultValue: 0)),
+                    Option.Create("opt5", "", argument: ArgumentList.Create<int>(arity: Arity.ZeroOrMore, "opt_arg2")),
                     Command.Create("subCmd1"),
-                    Command.Create("subCmd2", Option.Create<int>("opt2", "help me!"))
+                    Command.Create("subCmd2", Option.Create<int>("subCmd2-opt2", "help me!"))
                     ),
-               Command.Create("cmd2", Argument.Create("arg2", arity: Arity.ZeroOrOne)),
+               Command.Create("cmd2", ArgumentList.Create(arity: Arity.ZeroOrOne, "arg2")),
                Command.Create("cmd3"));
 
         [Fact]
@@ -26,6 +26,13 @@ namespace System.CommandLine.Tests
             var formatter = new TestFormatter()
                 .Parse(_command);
 
+        }
+
+        [Fact]
+        public void VisitorReport()
+        {
+            var visitor = new ReportVisitor();
+            var report = visitor.Report(_command);
         }
 
 
