@@ -22,8 +22,4 @@
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\System.CommandLine.CompletionSuggestions\System.CommandLine.CompletionSuggestions.csproj" />
-  </ItemGroup>
-
 </Project>

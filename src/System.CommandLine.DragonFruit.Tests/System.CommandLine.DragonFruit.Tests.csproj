@@ -16,7 +16,6 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\System.CommandLine.DragonFruit\System.CommandLine.DragonFruit.csproj" />
     <ProjectReference Include="..\System.CommandLine.Tests\System.CommandLine.Tests.csproj" />
   </ItemGroup>
 </Project>
