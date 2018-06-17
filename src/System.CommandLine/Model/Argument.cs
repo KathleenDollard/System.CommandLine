@@ -23,12 +23,12 @@ namespace System.CommandLine
            => new ArgumentList<T>(name, help, arity);
 
         public Arity Arity { get; private protected set; }
-        public ArgumentResult ArgumentResult { get; set; }
+        public new ArgumentResult Result => (ArgumentResult)base.Result;
 
- 
+
     }
 
-    public class ArgumentList<T> : ArgumentList
+    public class ArgumentList<T> : ArgumentList, IHasArgument
     {
         internal ArgumentList(string name = null, string help = null,
             Arity arity = default)
@@ -39,5 +39,15 @@ namespace System.CommandLine
         public Func<T> DefaultValuesFunc { get; internal set; }        // At least to allow today
         private ArgumentResult<T> SpecificResult { get; } = new ArgumentResult<T>();
         public IEnumerable<Func<T, ValidationIssue>> Validators { get; } = new List<Func<T, ValidationIssue>>();
+
+        ArgumentList IHasArgument.Argument => throw new NotImplementedException();
+
+        Func<object> IHasArgument.DefaultValueFunc => DefaultValuesFunc == null
+                                                      ? (Func<object>)null
+                                                      : () => DefaultValuesFunc();
+
+        object IHasArgument.DefaultValue => DefaultValue;
+
+        string ISymbol.Token => throw new NotImplementedException();
     }
 }

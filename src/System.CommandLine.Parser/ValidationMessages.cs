@@ -15,23 +15,23 @@ namespace System.CommandLine.Parser
         {
         }
 
-        public virtual string ExpectsOneArgument(IHasArgument  symbol) =>
-            symbol is Command command
-                ? $"Command '{symbol.Token}' expects a single argument but {symbol.Argument.Result.Count} were provided."
-                : $"Option '{symbol.Token}' expects a single argument but {symbol.Argument.Result.Count} were provided.";
-
-        public virtual string ExpectsFewerArguments(IHasArgument symbol, int maximumNumberOfArguments) =>
+        public virtual string ExpectsOneArgument(Symbol symbol) =>
             symbol is Command
-                ? $"Command '{symbol.Token}' expects no more than {maximumNumberOfArguments} arguments, but {symbol.Argument.Result.Count} were provided."
-                : $"Option '{symbol.Token}' expects no more than {maximumNumberOfArguments} arguments, but {symbol.Argument.Result.Count} were provided.";
+                ? $"Command '{symbol.Token}' expects a single argument but {symbol.Arguments.Count} were provided."
+                : $"Option '{symbol.Token}' expects a single argument but {symbol.Arguments.Count} were provided.";
+
+        public virtual string ExpectsFewerArguments(Symbol symbol, int maximumNumberOfArguments) =>
+            symbol is Command
+                ? $"Command '{symbol.Token}' expects no more than {maximumNumberOfArguments} arguments, but {symbol.Arguments.Count} were provided."
+                : $"Option '{symbol.Token}' expects no more than {maximumNumberOfArguments} arguments, but {symbol.Arguments.Count} were provided.";
 
         public virtual string FileDoesNotExist(string filePath) =>
             $"File does not exist: {filePath}";
 
-        public virtual string NoArgumentsAllowed(IHasArgument symbol) =>
+        public virtual string NoArgumentsAllowed(Symbol symbol) =>
             $"Arguments not allowed for option: {symbol.Token}";
 
-        public virtual string RequiredArgumentMissing(IHasArgument symbol) =>
+        public virtual string RequiredArgumentMissing(Symbol symbol) =>
             symbol is Command
                 ? $"Required argument missing for command: {symbol.Token}"
                 : $"Required argument missing for option: {symbol.Token}";

@@ -1,20 +1,20 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace System.CommandLine
+namespace System.CommandLine.Parser
 {
     public class ParseError
     {
         internal ParseError(
-            string message,
-            BaseSymbolPart symbol = null,
+            string message, 
+            Symbol symbol = null,
             bool canTokenBeRetried = true)
         {
             if (string.IsNullOrWhiteSpace(message))
             {
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(message));
             }
-
+          
             Message = message;
             Symbol = symbol;
             CanTokenBeRetried = canTokenBeRetried;
@@ -22,7 +22,7 @@ namespace System.CommandLine
 
         public string Message { get; }
 
-        public BaseSymbolPart Symbol { get; }
+        public Symbol Symbol { get; }
 
         internal bool CanTokenBeRetried { get; }
 

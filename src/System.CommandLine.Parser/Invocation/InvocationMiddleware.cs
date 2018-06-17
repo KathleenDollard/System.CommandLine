@@ -3,7 +3,7 @@
 
 using System.Threading.Tasks;
 
-namespace System.CommandLine.Invocation
+namespace System.CommandLine.Parser.Invocation
 {
     public delegate Task InvocationMiddleware(
         InvocationContext context,

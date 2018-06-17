@@ -6,13 +6,13 @@ using System.Linq;
 
 namespace System.CommandLine.Parser
 {
-    internal class ParseResultMaker
+    public class ParseResult
     {
         private readonly List<ParseError> _errors = new List<ParseError>();
 
-        internal ParseResultMaker(
-            CommandInfo rootCommand,
-            CommandInfo commandToExecute,
+        internal ParseResult(
+            Command rootCommand,
+            Command command,
             IReadOnlyCollection<string> tokens,
             IReadOnlyCollection<string> unparsedTokens,
             IReadOnlyCollection<string> unmatchedTokens,
@@ -20,7 +20,7 @@ namespace System.CommandLine.Parser
             string rawInput)
         {
             RootCommand = rootCommand;
-            Command = commandToExecute;
+            Command = command;
             Tokens = tokens;
             UnparsedTokens = unparsedTokens;
             UnmatchedTokens = unmatchedTokens;
@@ -34,9 +34,9 @@ namespace System.CommandLine.Parser
             AddImplicitOptionsAndCheckForErrors();
         }
 
-        public CommandInfo Command { get; }
+        public Command Command { get; }
 
-        public CommandInfo RootCommand { get; }
+        public Command RootCommand { get; }
 
         public IReadOnlyCollection<ParseError> Errors => _errors;
 
@@ -50,24 +50,6 @@ namespace System.CommandLine.Parser
 
         private void AddImplicitOptionsAndCheckForErrors()
         {
-
-            Action<Option> action = SetImplicitOptions;
-
-            void SetImplicitOptions(Option option)
-            {
-                if (option.IsDefault)
-                option.Result.IsUsed = true;
-                if (option is )
-            }
-
-            void
-            var optionErrors = RootCommand
-            foreach (var option in RootCommand.Options)
-            {
-
-            }
-
-            // This code looks weird as it doesn't recurse - it seems to look at the options and sets defaults
             foreach (var symbol in RootCommand.AllSymbols().ToArray())
             {
                 if (symbol is Command command)
@@ -130,8 +112,8 @@ namespace System.CommandLine.Parser
             return this[alias].GetValueOrDefault<T>();
         }
 
-        public BaseSymbolPart this[string alias] => Command.Children[alias];
+        public Symbol this[string alias] => Command.Children[alias];
 
-        public override string ToString() => $"{nameof(ParseResultMaker)}: {this.Diagram()}";
+        public override string ToString() => $"{nameof(ParseResult)}: {this.Diagram()}";
     }
 }

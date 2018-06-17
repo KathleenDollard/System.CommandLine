@@ -1,6 +1,6 @@
 namespace System.CommandLine
 {
-    internal interface ICanParent
+    public interface ICanParent
     {
     }
 }

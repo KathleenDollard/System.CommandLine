@@ -5,16 +5,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace System.CommandLine
+namespace System.CommandLine.Parser
 {
-    public class Parser.Parser
+    public class Parser
     {
-        //public Parser(CommandLineConfiguration configuration)
-        //{
-        //    Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        //}
+        public Parser(CommandLineConfiguration configuration)
+        {
+            Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        }
 
-        public Parser(params BaseSymbolPart[] symbolDefinitions) : this(new CommandLineConfiguration(symbolDefinitions))
+        public Parser(params SymbolDefinition[] symbolDefinitions) : this(new CommandLineConfiguration(symbolDefinitions))
         {
         }
 
@@ -55,7 +55,7 @@ namespace System.CommandLine
                         {
                             symbol = Symbol.Create(symbolDefinition, token.Value, validationMessages: Configuration.ValidationMessages);
 
-                            rootCommand = (Command)symbol;
+                            rootCommand = (Command) symbol;
                         }
 
                         allSymbols.Add(symbol);

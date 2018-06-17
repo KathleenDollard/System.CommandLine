@@ -40,12 +40,9 @@ namespace System.CommandLine
                 => GetEnumerator();
         }
 
-        public IEnumerable<string> Aliases { get; } = new List<string>();
+        public new OptionResult Result => (OptionResult)base.Result;
 
-        public class OptionResult : BaseResult
-        {
-            public string SpecifiedToken { get; internal set; }
-        }
+        public IEnumerable<string> Aliases { get; } = new List<string>();
 
         /// <summary>
         /// Create a boolean option
@@ -85,7 +82,7 @@ namespace System.CommandLine
 
     }
 
-    public class Option<T> : Option
+    public class Option<T> : Option , IHasArgument
     {
         public Option(string name, string help = default)
              : this(name, help, default, (Arity)default, default)
@@ -109,6 +106,16 @@ namespace System.CommandLine
         }
 
         public ArgumentList<T> Argument { get; internal set; }
+
+        ArgumentList IHasArgument.Argument => ((IHasArgument)Argument).Argument;
+
+        public Func<object> DefaultValueFunc => ((IHasArgument)Argument).DefaultValueFunc;
+
+        public object DefaultValue => ((IHasArgument)Argument).DefaultValue;
+
+        public Arity Arity => ((IHasArgument)Argument).Arity;
+
+        ArgumentResult IHasArgument.Result => ((IHasArgument)Argument).Result;
 
         protected override void AcceptChildren(IVisitor<Option> visitor)
         {

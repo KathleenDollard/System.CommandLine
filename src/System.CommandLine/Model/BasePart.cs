@@ -17,7 +17,10 @@ namespace System.CommandLine
 
         public string Id { get; internal set; }
         public ICanParent Parent { get; set; }
-        public BaseResult Result { get; private protected set; }
+        public BaseResult Result { get; private set; }
+
+        internal void SetResult(BaseResult result)
+            => Result = result;
 
         public string Name { get; internal set; }
         public string Help { get; internal set; }

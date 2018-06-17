@@ -14,7 +14,7 @@ namespace System.CommandLine.Formatters
         {
             var ret = $"\r\n{Spaces(_i)} [ {command.Name}";
             _i += 5;
-            ret += ParseArgument(command) + Parse(command.Options) + Parse(command.Commands) + " ]";
+            ret += ParseArgument(command) + Parse(command.Options) + Parse(command.SubCommands) + " ]";
             _i -= 5;
             return ret;
         }

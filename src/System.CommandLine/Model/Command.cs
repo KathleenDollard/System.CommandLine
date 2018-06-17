@@ -52,28 +52,6 @@ namespace System.CommandLine
         }
     }
 
-    public class CommandLine : Command
-    {
-        internal CommandLine(string help = null) : base(default, help)
-        { }
-
-        public static CommandLine Create(string help = null)
-         => new CommandLine(help);
-
-        public static CommandLine Create(params BasePart[] subParts)
-            => Create(default, subParts);
-
-        public static new CommandLine Create(string help, params BasePart[] subParts)
-            => Create(help)
-               .AddSubParts(subParts);
-    }
-
-    public class CommandLine<T> : Command<T>
-    {
-        public CommandLine(string help = null) : base("", help, new string[] { }, Arity.Many.Default)
-        { }
-    }
-
     public class Command : BaseSymbolPart<Command>, ICanParent
     {
         internal Command(string name, string help = default) : base(name, help)
@@ -105,13 +83,14 @@ namespace System.CommandLine
         // I'm wondering whether these are an inherent part of the definition or part of parsing. 
         public bool? TreatUnmatchedTokensAsErrors { get; }
         internal MethodBinder ExecutionHandler { get; }
+        public new CommandResult Result => (CommandResult)base.Result;
 
-        public CommandCollection Commands { get; } = new CommandCollection();
+        public CommandCollection SubCommands { get; } = new CommandCollection();
         public Option.OptionCollection Options { get; } = new Option.OptionCollection();
 
         internal Command AddCommand(Command newCommand)
         {
-            Commands.AddCommand(newCommand);
+            SubCommands.AddCommand(newCommand);
             return this;
         }
 
@@ -137,16 +116,9 @@ namespace System.CommandLine
            => new Command<T>(name, help, default, argument)
                .AddSubParts(subParts);
 
-        public class CommandResult : BaseResult
-        {
-            public string SpecifiedToken { get; internal set; }
-            public CommandCollection CalledCommands { get; } = new CommandCollection();
-            public Option.OptionCollection CalledOptions { get; } = new Option.OptionCollection();
-        }
-
         protected override void AcceptChildren(IVisitor<Command> visitor)
         {
-            foreach(var command in Commands)
+            foreach(var command in SubCommands)
             { command.Accept(visitor); }
             if (visitor is IVisitorStart<Option> optionVisitor )
             foreach (var option in Options)
@@ -171,9 +143,16 @@ namespace System.CommandLine
 
         public ArgumentList<T> Argument { get; internal set; }
 
+        public Func<object> DefaultValueFunc => ((IHasArgument)Argument).DefaultValueFunc;
+
+        public object DefaultValue => ((IHasArgument)Argument).DefaultValue;
+
+        public Arity Arity => ((IHasArgument)Argument).Arity;
+
         ArgumentList IHasArgument.Argument
             => Argument;
 
+        ArgumentResult IHasArgument.Result => ((IHasArgument)Argument).Result;
 
         protected override void AcceptChildren(IVisitor<Command> visitor)
         {

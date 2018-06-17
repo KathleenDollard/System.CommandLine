@@ -1,112 +1,91 @@
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Invocation;
+using System.CommandLine.Parser.Builder;
+using System.CommandLine.Parser.Invocation;
 using System.Linq;
 
 namespace System.CommandLine.Parser
 {
-    // KAD: The name of this file seems odd
     public class CommandLineConfiguration
     {
         private IReadOnlyCollection<InvocationMiddleware> _middlewarePipeline;
 
         public CommandLineConfiguration(
-            Command command,
+            IReadOnlyCollection<SymbolDefinition> symbolDefinitions,
             IReadOnlyCollection<char> argumentDelimiters = null,
             IReadOnlyCollection<string> prefixes = null,
             bool allowUnbundling = true,
             ValidationMessages validationMessages = null,
-            ResponseFileHandling responseFileHandling = default,
+            ResponseFileHandling responseFileHandling = default(ResponseFileHandling),
             IReadOnlyCollection<InvocationMiddleware> middlewarePipeline = null)
         {
-            if (command == null)
+            if (symbolDefinitions == null)
             {
-                throw new ArgumentNullException(nameof(command));
+                throw new ArgumentNullException(nameof(symbolDefinitions));
             }
 
-            // Why do you have to have an option, argument or subcommand? Removed check here
+            if (!symbolDefinitions.Any())
+            {
+                throw new ArgumentException("You must specify at least one option.");
+            }
 
-            // Why is ArgumentDelimiters state?
             ArgumentDelimiters = argumentDelimiters ?? new[] { ':', '=' };
-            CheckForDelimiterUsage(command, ArgumentDelimiters);
 
-            var symbolDefinitions = command.Options.OfType<BaseSymbolPart>().Union(command.Commands);
-
-            // TODO: Not yet doing the non root scenario
-            if (symbolDefinitions.Count() == 1 &&
-                symbolDefinitions.Single() is Command rootCommandDefinition)
+            foreach (var definition in symbolDefinitions)
             {
-                RootCommand = rootCommandDefinition;
+                foreach (var alias in definition.RawAliases)
+                {
+                    foreach (var delimiter in ArgumentDelimiters)
+                    {
+                        if (alias.Contains(delimiter))
+                        {
+                            throw new ArgumentException($"Symbol cannot contain delimiter: {delimiter}");
+                        }
+                    }
+                }
             }
-            //else
-            //{
-            //    RootCommand = new Command(
-            //        ParserUtils.ExeName,
-            //        "",
-            //        symbolDefinitions);
-            //}
 
-            SymbolDefinitions.Add(RootCommand);
+            if (symbolDefinitions.Count == 1 &&
+                symbolDefinitions.Single() is CommandDefinition rootComanCommandDefinition)
+            {
+                RootCommandDefinition = rootComanCommandDefinition;
+            }
+            else
+            {
+                RootCommandDefinition = new CommandDefinition(
+                    CommandLineBuilder.ExeName,
+                    "",
+                    symbolDefinitions);
+            }
+
+            SymbolDefinitions.Add(RootCommandDefinition);
 
             AllowUnbundling = allowUnbundling;
             ValidationMessages = validationMessages ?? ValidationMessages.Instance;
             ResponseFileHandling = responseFileHandling;
             _middlewarePipeline = middlewarePipeline;
             Prefixes = prefixes;
-            FixOptionPrefixes(command, prefixes);
-        }
 
-        private static void FixOptionPrefixes(Command command, IReadOnlyCollection<string> prefixes)
-        {
             if (prefixes?.Count > 0)
             {
-                foreach (Option option in command.Options)
+                foreach (SymbolDefinition symbol in symbolDefinitions)
                 {
-                    var workingAliases = option.Aliases.Select(x => StripPrefix(x));
-                    var constructedAliases = new List<string>();
-                    foreach (string alias in workingAliases)
+                    foreach (string alias in symbol.RawAliases.ToList())
                     {
-                        foreach (var prefix in prefixes)
+                        if (!prefixes.All(prefix => alias.StartsWith(prefix)))
                         {
-                            constructedAliases.Add(prefix + alias);
+                            foreach (var prefix in prefixes)
+                            {
+                                symbol.AddAlias(prefix + alias);
+                            }
                         }
                     }
-                    option.ConstructedAliases = constructedAliases;
-                }
-                string StripPrefix(string alias)
-                {
-                    foreach (string prefix in prefixes)
-                    {
-                        if (alias.StartsWith(prefix))
-                        { alias.Replace(prefix, ""); }
-                    }
-                    return alias;
                 }
             }
-        }
-
-        private static void CheckForDelimiterUsage(Command command, IEnumerable<char> argumentDelimiters)
-        {
-            foreach (var delimiter in argumentDelimiters)
-            {
-                command.Options.Select(o => o.Aliases
-                                .Select(x => CheckDelimiter(x, delimiter)));
-                command.Options.Select(c => CheckDelimiter(c.Name, delimiter));
-                command.Commands.Select(c => CheckDelimiter(c.Name, delimiter));
-                if (command is IHasArgument withArgument)
-                {
-                    CheckDelimiter(withArgument.Argument.Name, delimiter);
-                }
-            }
-
-            int CheckDelimiter(string x, char delimiter) => x.Contains(delimiter)
-                                                     ? throw new ArgumentException($"Symbol cannot contain delimiter: {delimiter}")
-                                                     : 0;
         }
 
         public IReadOnlyCollection<string> Prefixes { get; }
 
-        public  List<BaseSymbolPart> SymbolDefinitions { get; } = new List<BaseSymbolPart>();
+        public SymbolDefinitionSet SymbolDefinitions { get; } = new SymbolDefinitionSet();
 
         public IReadOnlyCollection<char> ArgumentDelimiters { get; }
 
@@ -118,7 +97,7 @@ namespace System.CommandLine.Parser
             _middlewarePipeline ??
             (_middlewarePipeline = new List<InvocationMiddleware>());
 
-        internal Command RootCommand { get; }
+        internal CommandDefinition RootCommandDefinition { get; }
 
         internal ResponseFileHandling ResponseFileHandling { get; }
     }
