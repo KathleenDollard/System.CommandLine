@@ -6,6 +6,27 @@ using System.Text;
 
 namespace System.CommandLine
 {
+
+    public static class OptionExtensions
+    {
+
+        public static TOpt WithArgumentList<TOpt, T>(this TOpt option, ArgumentList<T> argument)
+            where TOpt : Option<T>
+        {
+            option.Argument = argument;
+            return option;
+        }
+
+
+        public static Option<T> WithArgumentList< T>(this Option<T> option, string name, Arity arity = default, T defaultValue = default)
+        {
+            var argument = new ArgumentList<T>(name, arity: arity );
+            argument.DefaultValue = defaultValue;
+            option.Argument = argument;
+            return option;
+        }
+    }
+
     // KAD: Option questions:
     //   What does "respecified" mean?
     //   Is Token what was actually specified?
@@ -47,6 +68,12 @@ namespace System.CommandLine
         /// <summary>
         /// Create a boolean option
         /// </summary>
+        public static Option Create(string name)
+            => new Option(name, null);
+
+        /// <summary>
+        /// Create a boolean option
+        /// </summary>
         public static Option Create(string name, string help = default, string[] aliases = default)
             => new Option(name, help);
 
@@ -59,31 +86,42 @@ namespace System.CommandLine
         /// <summary>
         /// Create an option with a single argument of a type that can be specified or inferred from the default value
         /// </summary>
-        public static Option Create<T>(Arity arity, string name, string help = default, string[] aliases = default, T defaultValue = default)
+        public static Option<T> Create<T>(string name)
+            => new Option<T>(name, default);
+
+        /// <summary>
+        /// Create an option with a single argument of a type that can be specified or inferred from the default value
+        /// </summary>
+        public static Option<T> Create<T>(Arity arity, string name, string help = default, string[] aliases = default, T defaultValue = default)
             => new Option<T>(name, help, aliases, arity, defaultValue);
 
         /// <summary>
         /// Create an option with a single argument of a type that can be specified or inferred from the default value
         /// </summary>
-        public static Option Create<T>( string name, string help = default, string[] aliases = default, T defaultValue = default)
+        public static Option<T> Create<T>(string name, string help = default, string[] aliases = default, T defaultValue = default)
             => new Option<T>(name, help, aliases, default, defaultValue);
 
         /// <summary>
         /// Create a boolean option
         /// </summary>
-        public static Option Create<T>(string name, string help = default)
-            => new Option<T>(name, help, default,(Arity)default);
+        public static Option<T> Create<T>(string name, string help = default)
+            => new Option<T>(name, help, default, (Arity)default);
 
         /// <summary>
         /// Create an option with a single argument of a type that can be specified or inferred from the default value
         /// </summary>
-        public static Option Create<T>(string name, string help = default, string[] aliases = default, T defaultValue = default, ArgumentList<T> argument = default)
+        public static Option<T> Create<T>(string name, string help = default, string[] aliases = default, T defaultValue = default, ArgumentList<T> argument = default)
             => new Option<T>(name, help, argument, aliases);
+
 
     }
 
-    public class Option<T> : Option , IHasArgument
+    public class Option<T> : Option, IHasArgument
     {
+        public Option(string name)
+            : this(name, default, default, (Arity)default, default)
+        { }
+
         public Option(string name, string help = default)
              : this(name, help, default, (Arity)default, default)
         { }

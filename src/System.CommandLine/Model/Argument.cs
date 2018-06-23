@@ -10,19 +10,31 @@ namespace System.CommandLine
     public abstract class ArgumentList : BasePart<ArgumentList>
     {
 
+        internal ArgumentList(string name)
+             : base(name, default)
+        { }
+
         internal ArgumentList(string name, string help)
                : base(name, help)
         { }
+
+        public static ArgumentList<string> Create(string name = default,
+             string help = default, string defaultValue = default)
+            => new ArgumentList<string>(name, help, default);
 
         public static ArgumentList<string> Create(Arity arity = default, string name = default,
                     string help = default, string defaultValue = default)
            => new ArgumentList<string>(name, help, arity);
 
+        public static ArgumentList<T> Create<T>(string name = default,
+                    string help = default, T defaultValue = default)
+           => new ArgumentList<T>(name, help, default);
+
         public static ArgumentList<T> Create<T>(Arity arity = default, string name = default,
                     string help = default, T defaultValue = default)
            => new ArgumentList<T>(name, help, arity);
 
-        public Arity Arity { get; private protected set; }
+        public Arity Arity { get; internal set; }
         public new ArgumentResult Result => (ArgumentResult)base.Result;
 
 

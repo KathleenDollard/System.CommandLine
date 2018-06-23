@@ -13,9 +13,105 @@ namespace System.CommandLine
 
     // Exactly like Command, except different constructor to aid in learning
 
+        // Similar to CommandExtensions but allowing command line return values
+    //public static class CommandLineExtensions
+    //{
+    //    internal static CommandLine<T> AddArgument<TCmd, T>(this CommandLine<T> command, ArgumentList<T> argument)
+    //        where TCmd : CommandLine<T>
+    //    {
+    //        argument.Parent = command;
+    //        command.Argument = argument;
+    //        return command;
+    //    }
+
+    //    internal static TCmd AddSubParts<TCmd>(this TCmd command, IEnumerable<BasePart> subParts)
+    //        where TCmd : CommandLine
+    //    {
+    //        foreach (var part in subParts)
+    //        {
+    //            command.AddPart(part);
+
+    //        }
+    //        return command;
+    //    }
+
+    //    internal static void AddPart<TCmd>(this TCmd command, BasePart part)
+    //        where TCmd : CommandLine
+    //    {
+    //        part.Parent = command;
+    //        switch (part)
+    //        {
+    //            case Option option:
+    //                command.AddOptions(option);
+    //                break;
+    //            case Command subCommand:
+    //                command.AddCommands(subCommand);
+    //                break;
+    //            default:
+    //                break;
+    //        }
+    //    }
+
+    //    public static TCmd WithOptions<TCmd>(this TCmd command, params Option[] options)
+    //        where TCmd : CommandLine
+    //    {
+    //        command.AddOptions(options);
+    //        return command;
+    //    }
+
+
+    //    public static TCmd WithCommands<TCmd>(this TCmd command, params Command[] childCommands)
+    //        where TCmd : CommandLine
+    //    {
+    //        command.AddCommands(childCommands);
+    //        return command;
+    //    }
+
+    //    public static TCmd WithHelp<TCmd>(this TCmd part, string help)
+    //        where TCmd : CommandLine
+    //    {
+    //        part.Help = help;
+    //        return part;
+    //    }
+
+    //    public static Command<T> WithArgumentList<T>(this Command<T> command, ArgumentList<T> argument)
+    //    {
+    //        command.Argument = argument;
+    //        return command;
+    //    }
+
+    //    public static Command<T> WithArgumentList<T>(this Command<T> option, string name, Arity arity = default, T defaultValue = default)
+    //    {
+    //        var argument = new ArgumentList<T>(name, arity: arity) {
+    //            DefaultValue = defaultValue
+    //        };
+    //        option.Argument = argument;
+    //        return option;
+    //    }
+
+    //    public static TArg WithArity<TArg>(this TArg argument, Arity arity)
+    //        where TArg : ArgumentList
+    //    {
+    //        argument.Arity = arity;
+    //        return argument;
+    //    }
+
+    //}
+
+    public static class PartExtensions
+    {
+
+        public static TPart WithHelp<TPart>(this TPart part, string help)
+            where TPart : BasePart
+        {
+            part.Help = help;
+            return part;
+        }
+    }
+
     public static class CommandExtensions
     {
-        internal static TCmd AddArgument<TCmd, T>(this TCmd command, ArgumentList<T> argument)
+        internal static Command<T> AddArgument<TCmd, T>(this Command<T> command, ArgumentList<T> argument)
             where TCmd : Command<T>
         {
             argument.Parent = command;
@@ -23,7 +119,7 @@ namespace System.CommandLine
             return command;
         }
 
-        internal static TCmd AddSubParts<TCmd>(this TCmd command, BasePart[] subParts)
+        internal static TCmd AddSubParts<TCmd>(this TCmd command, IEnumerable<BasePart> subParts)
             where TCmd : Command
         {
             foreach (var part in subParts)
@@ -41,15 +137,60 @@ namespace System.CommandLine
             switch (part)
             {
                 case Option option:
-                    command.Options.AddOption(option);
+                    command.AddOptions(option);
                     break;
                 case Command subCommand:
-                    command.AddCommand(subCommand);
+                    command.AddCommands(subCommand);
                     break;
                 default:
                     break;
             }
         }
+
+        public static TCmd WithOptions<TCmd>(this TCmd command, params Option[] options)
+            where TCmd : Command
+        {
+            command.AddOptions(options);
+            return command;
+        }
+
+
+        public static TCmd WithCommands<TCmd>(this TCmd command, params Command[] childCommands)
+            where TCmd : Command
+        {
+            command.AddCommands(childCommands);
+            return command;
+        }
+
+        public static TCmd WithHelp<TCmd>(this TCmd part, string help)
+            where TCmd : CommandLine
+        {
+            part.Help = help;
+            return part;
+        }
+
+        public static Command<T> WithArgumentList<T>(this Command<T> command, ArgumentList<T> argument)
+        {
+            command.Argument = argument;
+            return command;
+        }
+
+        public static Command<T> WithArgumentList<T>(this Command<T> option, string name, Arity arity = default, T defaultValue = default)
+        {
+            var argument = new ArgumentList<T>(name, arity: arity) {
+                DefaultValue = defaultValue
+            };
+            option.Argument = argument;
+            return option;
+        }
+
+        public static TArg WithArity<TArg>(this TArg argument,Arity arity)
+            where TArg : ArgumentList
+        {
+            argument.Arity = arity;
+            return argument;
+        }
+
     }
 
     public class Command : BaseSymbolPart<Command>, ICanParent
@@ -88,33 +229,58 @@ namespace System.CommandLine
         public CommandCollection SubCommands { get; } = new CommandCollection();
         public Option.OptionCollection Options { get; } = new Option.OptionCollection();
 
-        internal Command AddCommand(Command newCommand)
+        internal Command AddCommands(params Command[] childCommands)
         {
-            SubCommands.AddCommand(newCommand);
+            foreach (var childCommand in childCommands)
+            {
+                SubCommands.AddCommand(childCommand);
+            }
             return this;
         }
+
+        internal Command AddOptions(params Option[] options)
+        {
+            foreach (var option in options)
+            {
+                Options.AddOption(option);
+            }
+            return this;
+        }
+
+        public static Command Create(string name)
+            => new Command(name, null);
+
+        public static Command<T> Create<T>(string name, string help = null,
+                  ArgumentList<T> argument = null,
+                  params BasePart[] baseParts)
+                  => new Command<T>(name, help)
+                     .WithArgumentList(argument)
+                     .AddSubParts(baseParts);
+
+        public static Command Create(string name, string help = null,
+                  params BasePart[] baseParts)
+                  => new Command(name, help)
+                     .AddSubParts(baseParts);
+
+        public static Command<T> Create<T>(string name, string help = null,
+              ArgumentList<T> argument = null,
+              IEnumerable<Command> commands = null,
+              IEnumerable<Option> options = null)
+              => new Command<T>(name, help)
+                 .WithArgumentList(argument)
+                 .AddSubParts(commands)
+                 .AddSubParts(options);
+
+        public static Command Create(string name, string help = null,
+             IEnumerable<Command> commands = null,
+             IEnumerable<Option> options = null)
+             => new Command(name, help)
+                .AddSubParts(commands)
+                .AddSubParts(options);
 
         public static Command Create(string name, string help = null)
             => new Command(name, help);
 
-        //public Command AddCommand(string name, string help = null, params BaseSymbolPart[] subParts)
-        //    => AddCommand(Create(name, help, subParts));
-
-        public static Command Create(string name, params BasePart[] subParts)
-            => new Command(name)
-              .AddSubParts(subParts);
-
-        public static Command Create(string name, string help, params BasePart[] subParts)
-            => new Command(name, help)
-               .AddSubParts(subParts);
-
-        public static Command Create<T>(string name, ArgumentList<T> argument, params BasePart[] subParts)
-            => new Command<T>(name,default, default, argument)
-              .AddSubParts(subParts);
-
-        public static Command Create<T>(string name, string help, ArgumentList<T> argument, params BasePart[] subParts)
-           => new Command<T>(name, help, default, argument)
-               .AddSubParts(subParts);
 
         protected override void AcceptChildren(IVisitor<Command> visitor)
         {
@@ -129,7 +295,7 @@ namespace System.CommandLine
 
     public class Command<T> : Command, IHasArgument 
     {
-        internal Command(string name, string help, string[] aliases, Arity arity)
+        internal Command(string name, string help, string[] aliases = null, Arity arity = null)
             : base(name, help)
             =>
             // OK, this is ugly. Get someone to explain why I need this. 
