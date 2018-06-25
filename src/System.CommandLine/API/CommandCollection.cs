@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace System.CommandLine
+namespace System.CommandLine.API
 {
     public class CommandCollection : IEnumerable<Command>
     {

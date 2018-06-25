@@ -1,4 +1,4 @@
-﻿namespace System.CommandLine
+namespace System.CommandLine.API
 {
     public static class PartExtensions
     {

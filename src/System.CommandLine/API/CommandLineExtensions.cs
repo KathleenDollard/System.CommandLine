@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace System.CommandLine
+namespace System.CommandLine.API
 {
     public static class CommandLineExtensions
     {

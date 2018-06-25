@@ -1,6 +1,7 @@
 using System.Collections.Generic;
+using System.CommandLine.API;
 
-namespace System.CommandLine
+namespace System.CommandLine.Result
 {
     public class CommandLineResult : BaseResult
     {

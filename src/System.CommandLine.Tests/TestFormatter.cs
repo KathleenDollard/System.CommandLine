@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.CommandLine.API;
 
 namespace System.CommandLine.Formatters
 {

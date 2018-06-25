@@ -1,4 +1,4 @@
-namespace System.CommandLine
+namespace System.CommandLine.Result
 {
     public class OptionResult : BaseResult
     {

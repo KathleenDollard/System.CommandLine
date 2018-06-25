@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.CommandLine.Common;
+using System.CommandLine.Result;
 using System.Text;
 
-namespace System.CommandLine
+namespace System.CommandLine.API
 {
     // KAD: TODO: Skipping Suggest for now, was on SymbolDefinition and ArgumentDefinition
     public abstract class BasePart

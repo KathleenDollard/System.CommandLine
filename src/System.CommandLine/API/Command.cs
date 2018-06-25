@@ -5,7 +5,7 @@ using System.CommandLine.Common;
 using System.Linq;
 using System.Text;
 
-namespace System.CommandLine
+namespace System.CommandLine.API
 {
 
     public class Command : BaseCommand, ICanParent

@@ -4,7 +4,7 @@ using System.CommandLine.Common;
 using System.Linq;
 using System.Text;
 
-namespace System.CommandLine
+namespace System.CommandLine.API
 {
 
     public partial class BaseCommand : BaseSymbolPart<Command>, ICanParent

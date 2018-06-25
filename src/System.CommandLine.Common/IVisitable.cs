@@ -1,4 +1,4 @@
-namespace System.CommandLine
+namespace System.CommandLine.Common
 {
     public interface IVisitable<TPart>
         //where TPart: BasePart<TPart>

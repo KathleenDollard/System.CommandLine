@@ -1,7 +1,8 @@
 using System.Collections.Generic;
-using KAD = System.CommandLine;
+using KAD = System.CommandLine.API;
 using System.Linq;
 using System.Collections.ObjectModel;
+using System.CommandLine.API;
 
 namespace System.CommandLine.Parser
 {

@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using System.CommandLine.Common;
 
-namespace System.CommandLine
+namespace System.CommandLine.Result
 {
     public abstract class BaseResult
     {

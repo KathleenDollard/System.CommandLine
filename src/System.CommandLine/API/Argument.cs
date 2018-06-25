@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace System.CommandLine
+namespace System.CommandLine.API
 {
     // Argument questions:
 
@@ -56,7 +56,7 @@ namespace System.CommandLine
         {
 
             // OK, this is ugly. Get someone to explain why I need the full name. 
-            var argument = System.CommandLine.Argument.Create<T>(
+            var argument = System.CommandLine.API.Argument.Create<T>(
                 arity: arity ?? Arity.ZeroOrMore,
                 name: name,
                 help: help,

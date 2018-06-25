@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.CommandLine.Common;
+using System.CommandLine.Result;
 using System.Text;
 
-namespace System.CommandLine
+namespace System.CommandLine.API
 {
 
     public static class OptionExtensions
@@ -18,8 +20,9 @@ namespace System.CommandLine
 
         public static Option<T> WithArgumentList< T>(this Option<T> option, string name, Arity arity = default, T defaultValue = default)
         {
-            var argument = new Argument<T>(name, arity: arity );
-            argument.DefaultValue = defaultValue;
+            var argument = new Argument<T>(name, arity: arity) {
+                DefaultValue = defaultValue
+            };
             option.Argument = argument;
             return option;
         }
@@ -113,7 +116,7 @@ namespace System.CommandLine
                     ? Arity.ZeroOrMore
                     : arity;
 
-            Argument = System.CommandLine.Argument.Create<T>(arity: arity);
+            Argument = API.Argument.Create<T>(arity: arity);
         }
 
         public Option(string name, string help, Argument<T> argument, params string[] aliases)

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.CommandLine.API;
+using System.CommandLine.Common;
 
 namespace System.CommandLine.Tests
 {
@@ -20,10 +22,7 @@ namespace System.CommandLine.Tests
             _indent += 5;
             _sb.AppendLine($"{Spaces(_indent - 5)}command:  {command.Name}");
         }
-        public void VisitEnd(Command command)
-        {
-            _indent -= 5;
-        }
+        public void VisitEnd(Command command) => _indent -= 5;
 
         public void Visit(Option option)
             => _sb.AppendLine($"{Spaces(_indent)}option:   {option.Name}");

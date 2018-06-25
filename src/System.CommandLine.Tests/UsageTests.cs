@@ -1,14 +1,14 @@
 using System.CommandLine.Formatters;
-using System.CommandLine.Parser;
 using FluentAssertions;
 using Xunit;
 using System.Collections.Generic;
+using System.CommandLine.API;
 
 namespace System.CommandLine.Tests
 {
     public class UsageTests
     {
-     
+
 
         private readonly CommandLine _command =
           CommandLine.Create("",
@@ -19,7 +19,7 @@ namespace System.CommandLine.Tests
                              Option.Create("opt1"),
                              Option.Create<int?>("opt2","help me!"),
                              Option.Create<int?>( "opt3"),
-                             Option.Create("opt4", 
+                             Option.Create("opt4",
                                  argument: Argument.Create(arity: Arity.ExactlyOne, "opt_arg1", defaultValue: 0)),
                              Option.Create("opt5", "",
                                  argument: Argument.Create<int?>(arity: Arity.ZeroOrMore, "opt_arg2")) },
@@ -55,10 +55,11 @@ namespace System.CommandLine.Tests
         [InlineData("the-command --opt2 --opt3 Fred alpha beta", "[ testhost ![ the-command [ --opt2 <alpha> ] [ --opt3 <Fred> ] *[ --opt4 <0> ] <beta> ] ]")]
         public void ParseSample(string input, string expected)
         {
-            var commandDefinition = ParserWrapper.CreateDefinition(_command);
+            var commandDefinition = Parser.ParserWrapper.CreateDefinition(_command);
             // I don't like this semantics or extra step. I think the API creates the definition
-            var parser = new System.CommandLine.Parser.Parser(commandDefinition);
-            var diagram = parser.Parse(input).Diagram();
+            var parser = new Parser.Parser(commandDefinition);
+            var result = Parser.CommandDefinitionExtensions.Parse(commandDefinition, input);
+            var diagram = Parser.ParseResultExtensions.Diagram(result);
             diagram.Should().BeEquivalentTo(expected);
         }
 

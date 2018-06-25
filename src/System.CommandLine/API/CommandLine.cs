@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+using System.CommandLine.API;
+using System.CommandLine.Common;
+using System.CommandLine.Result;
 using System.Linq;
 
 namespace System.CommandLine
