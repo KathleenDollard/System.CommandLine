@@ -6,15 +6,14 @@ namespace System.CommandLine
 {
     public interface ISymbol
     {
-        string Token { get; }
+        //string Token { get; }
     }
 
     public interface IHasArgument : ISymbol // happens to always have a symbol. This might be an assumption
     {
-        ArgumentList Argument { get; }
-        Func<object> DefaultValueFunc { get; }
-        object DefaultValue { get; }
-        Arity Arity { get; }
-        ArgumentResult Result { get; }
+        Argument Argument { get; }
+        //Func<object> DefaultValueFunc { get; }
+        //object DefaultValue { get; }
+        //Arity Arity { get; }
     }
 }

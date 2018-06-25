@@ -5,61 +5,74 @@ namespace System.CommandLine
     // Argument questions:
 
 
-
-
-    public abstract class ArgumentList : BasePart<ArgumentList>
+    public abstract class Argument : BasePart<Argument>
     {
 
-        internal ArgumentList(string name)
+        internal Argument(string name)
              : base(name, default)
         { }
 
-        internal ArgumentList(string name, string help)
+        internal Argument(string name, string help)
                : base(name, help)
         { }
 
-        public static ArgumentList<string> Create(string name = default,
+        public static Argument<string> Create(string name = default,
              string help = default, string defaultValue = default)
-            => new ArgumentList<string>(name, help, default);
+            => new Argument<string>(name, help, default);
 
-        public static ArgumentList<string> Create(Arity arity = default, string name = default,
+        public static Argument<string> Create(Arity arity = default, string name = default,
                     string help = default, string defaultValue = default)
-           => new ArgumentList<string>(name, help, arity);
+           => new Argument<string>(name, help, arity);
 
-        public static ArgumentList<T> Create<T>(string name = default,
+        public static Argument<T> Create<T>(string name = default,
                     string help = default, T defaultValue = default)
-           => new ArgumentList<T>(name, help, default);
+           => new Argument<T>(name, help, default);
 
-        public static ArgumentList<T> Create<T>(Arity arity = default, string name = default,
+        public static Argument<T> Create<T>(Arity arity = default, string name = default,
                     string help = default, T defaultValue = default)
-           => new ArgumentList<T>(name, help, arity);
+           => new Argument<T>(name, help, arity);
 
         public Arity Arity { get; internal set; }
-        public new ArgumentResult Result => (ArgumentResult)base.Result;
+        //public new ArgumentResult Result => (ArgumentResult)base.Result;
 
+        protected abstract object GetDefaultValue();
+        public object DefaultValue
+            => GetDefaultValue();
+        protected abstract Func<object> GetDefaultValueFunc();
+        public Func<object> DefaultValueFunc
+            => GetDefaultValueFunc();
 
     }
 
-    public class ArgumentList<T> : ArgumentList, IHasArgument
+    public class Argument<T> : Argument
     {
-        internal ArgumentList(string name = null, string help = null,
+        internal Argument(string name = default, string help = default,
             Arity arity = default)
             : base(name, help)
             => Arity = arity;
 
-        public T DefaultValue { get; internal set; }
-        public Func<T> DefaultValuesFunc { get; internal set; }        // At least to allow today
-        private ArgumentResult<T> SpecificResult { get; } = new ArgumentResult<T>();
-        public IEnumerable<Func<T, ValidationIssue>> Validators { get; } = new List<Func<T, ValidationIssue>>();
+        internal static Argument<T> MakeArgument(string name = default, string help = default,
+            Arity arity = default, T defaultValue = default)
+        {
 
-        ArgumentList IHasArgument.Argument => throw new NotImplementedException();
+            // OK, this is ugly. Get someone to explain why I need the full name. 
+            var argument = System.CommandLine.Argument.Create<T>(
+                arity: arity ?? Arity.ZeroOrMore,
+                name: name,
+                help: help,
+                defaultValue: defaultValue);
+            return argument;
+        }
 
-        Func<object> IHasArgument.DefaultValueFunc => DefaultValuesFunc == null
-                                                      ? (Func<object>)null
-                                                      : () => DefaultValuesFunc();
+        protected override object GetDefaultValue()
+            => DefaultValue;
+        // The object cast is required
+        protected override Func<object> GetDefaultValueFunc()
+            => DefaultValuesFunc == null
+                ? (Func<object>)null
+                : () => (object)DefaultValuesFunc();
 
-        object IHasArgument.DefaultValue => DefaultValue;
-
-        string ISymbol.Token => throw new NotImplementedException();
+        public new T DefaultValue { get; internal set; }
+        public Func<T> DefaultValuesFunc { get; internal set; }   // At least to allow today
     }
 }

@@ -8,9 +8,9 @@ namespace System.CommandLine.Parser
     public class ParserWrapper
     {
 
-        public static CommandDefinition CreateDefinition(KAD.Command command)
+        public static CommandDefinition CreateDefinition(KAD.BaseCommand command)
         {
-            if (command.Name == null)
+            if (string.IsNullOrWhiteSpace(command.Name))
             {
                 command.Name = ParserUtils.ExeName.Value;
             }
@@ -22,7 +22,7 @@ namespace System.CommandLine.Parser
 
         }
 
-        private static CommandDefinition CommanDefinitionFrom(KAD.Command command)
+        private static CommandDefinition CommanDefinitionFrom(KAD.BaseCommand command)
         {
             var symbolCollection = SymbolDefinitonFrom(command.Options).Union(SymbolDefinitionFrom(command.SubCommands));
             var commandDefiniton = new CommandDefinition(command.Name, command.Help,
@@ -44,12 +44,15 @@ namespace System.CommandLine.Parser
         private static ArgumentDefinition ArgumentDefinitionFrom(IHasArgument withArgument)
         {
             Func<object> defaultValueFunc = null;
-            if (withArgument.DefaultValueFunc != null)
+            if (withArgument?.Argument?.DefaultValueFunc != null)
             {
-                defaultValueFunc= withArgument.DefaultValueFunc;
-                if (withArgument.DefaultValue != null)
+                defaultValueFunc = withArgument.Argument.DefaultValueFunc;
+            }
+            else
+            { 
+                if (withArgument?.Argument?.DefaultValue != null)
                 {
-                    defaultValueFunc = () => withArgument.DefaultValue;
+                    defaultValueFunc = () => withArgument.Argument.DefaultValue;
                 }
             }
             //Func<object> defaultValueFunc = withArgument.DefaultValueFunc
@@ -57,7 +60,7 @@ namespace System.CommandLine.Parser
             //                                      ? (Func<object>)null
             //                                      : () => withArgument.DefaultValue);
 
-            var argumentParser = new ArgumentParser(ArityValidatorFrom(withArgument.Arity));
+            var argumentParser = new ArgumentParser(ArityValidatorFrom(withArgument.Argument.Arity));
             // TODO: Several things missing
             return new ArgumentDefinition(argumentParser, defaultValueFunc);
         }
@@ -78,7 +81,7 @@ namespace System.CommandLine.Parser
             return null;
         }
 
-        private static IEnumerable<SymbolDefinition> SymbolDefinitionFrom(KAD.Command.CommandCollection commands)
+        private static IEnumerable<SymbolDefinition> SymbolDefinitionFrom(KAD.CommandCollection commands)
         {
             var list = new List<CommandDefinition>();
             foreach (var command in commands)
@@ -88,7 +91,7 @@ namespace System.CommandLine.Parser
             return list;
         }
 
-        private static IEnumerable<SymbolDefinition> SymbolDefinitonFrom(KAD.Option.OptionCollection options)
+        private static IEnumerable<SymbolDefinition> SymbolDefinitonFrom(KAD.OptionCollection options)
         {
             var list = new List<OptionDefinition>();
             foreach (var option in options)

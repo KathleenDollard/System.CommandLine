@@ -8,9 +8,9 @@ namespace System.CommandLine.Formatters
         private int _i = 0;
 
         public string Parse(CommandLine commandLine)
-            => Parse((Command)commandLine);
+            => Parse((BaseCommand)commandLine);
 
-        public string Parse(Command command)
+        public string Parse(BaseCommand command)
         {
             var ret = $"\r\n{Spaces(_i)} [ {command.Name}";
             _i += 5;
@@ -22,7 +22,7 @@ namespace System.CommandLine.Formatters
         private string Spaces(int count)
             => new string(' ', count);
 
-        private object ParseArgument(Command command)
+        private object ParseArgument(BaseCommand command)
             => command is IHasArgument commandWithArg
                 ? Parse(commandWithArg.Argument)
                 : null;
@@ -40,8 +40,10 @@ namespace System.CommandLine.Formatters
                ? $"\r\n{Spaces(_i)}subCommands: { string.Join(", ", commands.Select(c => Parse(c)))}"
                : null;
 
-        public string Parse(ArgumentList argument)
-            => $"\r\n{Spaces(_i)}args: { argument.Name } ";
+        public string Parse(Argument argument)
+            => argument == null
+               ? ""
+               : $"\r\n{Spaces(_i)}argument: { argument.Name } ";
 
     }
 }

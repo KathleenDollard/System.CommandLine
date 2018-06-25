@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace System.CommandLine
@@ -10,7 +8,7 @@ namespace System.CommandLine
     public static class OptionExtensions
     {
 
-        public static TOpt WithArgumentList<TOpt, T>(this TOpt option, ArgumentList<T> argument)
+        public static TOpt WithArgumentList<TOpt, T>(this TOpt option, Argument<T> argument)
             where TOpt : Option<T>
         {
             option.Argument = argument;
@@ -20,7 +18,7 @@ namespace System.CommandLine
 
         public static Option<T> WithArgumentList< T>(this Option<T> option, string name, Arity arity = default, T defaultValue = default)
         {
-            var argument = new ArgumentList<T>(name, arity: arity );
+            var argument = new Argument<T>(name, arity: arity );
             argument.DefaultValue = defaultValue;
             option.Argument = argument;
             return option;
@@ -32,7 +30,7 @@ namespace System.CommandLine
     //   Is Token what was actually specified?
 
     // This base class is used for boolean options
-    public class Option : BaseSymbolPart<Option>, ICanParent
+    public partial class Option : BaseSymbolPart<Option>, ICanParent
     {
         internal Option(string name, string help)
             : base(name, help)
@@ -41,25 +39,6 @@ namespace System.CommandLine
         internal Option(string name, string help, params string[] aliases)
             : base(name, help)
             => Aliases = aliases;
-
-        public class OptionCollection : IEnumerable<Option>
-        {
-            private readonly List<Option> _options = new List<Option>();
-
-            public Option this[string idOrName]
-                => _options.FirstOrDefault(x => x.Id == idOrName)
-                   ?? _options.FirstOrDefault(x => x.Name == idOrName)
-                   ?? _options.FirstOrDefault(x => x.Aliases.Contains(idOrName));
-
-            internal void AddOption(Option option)
-               => _options.Add(option);
-
-            public IEnumerator<Option> GetEnumerator()
-                => _options.GetEnumerator();
-
-            IEnumerator IEnumerable.GetEnumerator()
-                => GetEnumerator();
-        }
 
         public new OptionResult Result => (OptionResult)base.Result;
 
@@ -110,7 +89,7 @@ namespace System.CommandLine
         /// <summary>
         /// Create an option with a single argument of a type that can be specified or inferred from the default value
         /// </summary>
-        public static Option<T> Create<T>(string name, string help = default, string[] aliases = default, T defaultValue = default, ArgumentList<T> argument = default)
+        public static Option<T> Create<T>(string name, string help = default, string[] aliases = default, T defaultValue = default, Argument<T> argument = default)
             => new Option<T>(name, help, argument, aliases);
 
 
@@ -134,30 +113,22 @@ namespace System.CommandLine
                     ? Arity.ZeroOrMore
                     : arity;
 
-            Argument = ArgumentList.Create<T>(arity: arity);
+            Argument = System.CommandLine.Argument.Create<T>(arity: arity);
         }
 
-        public Option(string name, string help, ArgumentList<T> argument, params string[] aliases)
+        public Option(string name, string help, Argument<T> argument, params string[] aliases)
             : base(name, help, aliases)
         {
             Argument = argument;
         }
 
-        public ArgumentList<T> Argument { get; internal set; }
+        public Argument<T> Argument { get; internal set; }
 
-        ArgumentList IHasArgument.Argument => ((IHasArgument)Argument).Argument;
-
-        public Func<object> DefaultValueFunc => ((IHasArgument)Argument).DefaultValueFunc;
-
-        public object DefaultValue => ((IHasArgument)Argument).DefaultValue;
-
-        public Arity Arity => ((IHasArgument)Argument).Arity;
-
-        ArgumentResult IHasArgument.Result => ((IHasArgument)Argument).Result;
+        Argument IHasArgument.Argument => Argument;
 
         protected override void AcceptChildren(IVisitor<Option> visitor)
         {
-            if (visitor is IVisitorStart<ArgumentList> argumentVisitor)
+            if (visitor is IVisitorStart<Argument> argumentVisitor)
             {
                 Argument.Accept(argumentVisitor);
             }

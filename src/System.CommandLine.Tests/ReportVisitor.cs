@@ -6,7 +6,7 @@ namespace System.CommandLine.Tests
 {
     public class ReportVisitor : IVisitorStart<Command>, IVisitorEnd<Command>,
                                  IVisitorStart<Option>,
-                                 IVisitorStart<ArgumentList>
+                                 IVisitorStart<Argument>
     {
         private readonly StringBuilder _sb = new StringBuilder();
         private int _indent = 0;
@@ -27,9 +27,11 @@ namespace System.CommandLine.Tests
 
         public void Visit(Option option)
             => _sb.AppendLine($"{Spaces(_indent)}option:   {option.Name}");
-        public void Visit(ArgumentList argument)
+        public void Visit(Argument argument)
             => _sb.AppendLine($"{Spaces(_indent)}argument: {argument.Name ?? "<No Name Given>"}");
-        internal object Report(Command command)
+        internal object Report<TCmd>(TCmd command)
+            where TCmd : BaseCommand
+
         {
             command.Accept(this);
             return _sb.ToString();

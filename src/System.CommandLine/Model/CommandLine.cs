@@ -3,10 +3,49 @@ using System.Linq;
 
 namespace System.CommandLine
 {
-    public class CommandLine : Command
+    public class CommandLine : BaseCommand
     {
-        internal CommandLine(string help = null) : base(default, help)
+        private protected CommandLine(string name = default, string help = default)
+          : base(name, help)
         { }
+
+        private protected CommandLine(string name = default, string help = default,
+                IEnumerable<Command> commands = default,
+                IEnumerable<Option> options = default)
+            : base(name, help, commands, options)
+        { }
+
+        private protected CommandLine(string name = default, string help = default,
+                 CommandCollection commands = default,
+                 OptionCollection options = default)
+            : base(name, help, commands, options)
+        { }
+
+        public static CommandLine<T> Create<T>(string name, string help = default,
+              Argument<T> argument = default,
+                     CommandCollection commands = default,
+                     OptionCollection options = default)
+              => new CommandLine<T>(name, help, argument, commands, options);
+
+        public static CommandLine Create(string name, string help = default,
+                     CommandCollection commands = default,
+                     OptionCollection options = default)
+              => new CommandLine(name, help, commands, options);
+
+        public static CommandLine<T> Create<T>(string name, string help = default,
+              Argument<T> argument = default,
+             IEnumerable<Command> commands = default,
+             IEnumerable<Option> options = default)
+              => new CommandLine<T>(name, help, argument, commands, options);
+
+        public static CommandLine Create(string name, string help = default,
+             IEnumerable<Command> commands = default,
+             IEnumerable<Option> options = default)
+              => new CommandLine(name, help, commands, options);
+
+        public static CommandLine Create(string name, string help = default)
+            => new CommandLine(name, help);
+
 
         internal void ApplyResults(Command command, IEnumerable<string> unmatchedTokens)
         {
@@ -15,47 +54,46 @@ namespace System.CommandLine
             result.UnmatchedTokens = unmatchedTokens;
             SetResult(result);
         }
-
-        private static CommandLine Create(string help = null, params BasePart[] subParts)
-            => Create(help)
-               .AddSubParts(subParts);
-
-        public static CommandLine Create(string help = null,
-            IEnumerable<Command> commands = null,
-            IEnumerable<Option> options = null)
-            => new CommandLine(help)
-                .WithCommands(commands.ToArray())
-                .WithOptions(options.ToArray());
-
-
-        public static CommandLine<T> Create<T>(string help = null,
-            ArgumentList<T> argument = null,
-            IEnumerable<Command> commands = null,
-            IEnumerable<Option> options = null)
-            => (CommandLine<T>) new CommandLine<T>(help)
-               .WithArgumentList(argument )
-               .WithCommands(commands.ToArray())
-               .WithOptions(options.ToArray());
 
         public new CommandLineResult Result => (CommandLineResult)((BasePart)this).Result;
 
     }
 
-    public class CommandLine<T> : Command<T>
+    public class CommandLine<T> : CommandLine, IHasArgument 
     {
-        internal CommandLine(string help = null) : base(default, help)
-        { }
-
-        internal void ApplyResults(Command command, IEnumerable<string> unmatchedTokens)
+        internal CommandLine(string name = default,
+                    string help = default,
+                    Argument<T> argument = default,
+                    CommandCollection commands = default,
+                    OptionCollection options = default)
+                : base(name, help,  commands, options)
         {
-            var result = new CommandLineResult();
-            result.Command = command;
-            result.UnmatchedTokens = unmatchedTokens;
-            SetResult(result);
+            Argument = argument ?? Argument<T>.MakeArgument();
         }
 
-        public new CommandLineResult Result => (CommandLineResult)((BasePart)this).Result;
+        internal CommandLine(string name = default,
+                 string help = default,
+                 Argument<T> argument = default,
+                 IEnumerable<Command> commands = default,
+                 IEnumerable<Option> options = default)
+           : base(name, help, commands, options)
+        {
+            Argument = argument ?? Argument<T>.MakeArgument();
+        }
 
+        public Argument<T> Argument { get; internal set; }
+
+        Argument IHasArgument.Argument
+            => Argument;
+
+        protected override void AcceptChildren(IVisitor<Command> visitor)
+        {
+            if (visitor is IVisitorStart<Argument> argumentVisitor)
+            {
+                Argument.Accept(argumentVisitor);
+            }
+            base.AcceptChildren(visitor);
+        }
     }
 
 }
