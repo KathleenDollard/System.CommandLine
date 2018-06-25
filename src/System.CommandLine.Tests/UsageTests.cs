@@ -40,12 +40,12 @@ namespace System.CommandLine.Tests
 
         }
 
-        [Fact]
-        public void VisitorReport()
-        {
-            var visitor = new ReportVisitor();
-            var report = visitor.Report(_command);
-        }
+        //[Fact]
+        //public void VisitorReport()
+        //{
+        //    var visitor = new ReportVisitor();
+        //    var report = visitor.Report(_command);
+        //}
 
         [Theory]
         [InlineData("the-command --opt2", "[ testhost ![ the-command [ --opt2 ] *[ --opt4 <0> ] ] ]")]
