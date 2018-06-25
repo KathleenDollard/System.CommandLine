@@ -10,10 +10,6 @@ namespace System.CommandLine
 
     public class Command : BaseCommand, ICanParent
     {
-        private protected Command(string name = default, string help = default)
-            : base(name, help)
-        { }
-
         private protected Command(string name = default, string help = default,
                 IEnumerable<Command> commands = default,
                 IEnumerable<Option> options = default)
@@ -21,70 +17,102 @@ namespace System.CommandLine
         { }
 
         private protected Command(string name = default, string help = default,
-                 CommandCollection commands = default,
-                 OptionCollection options = default)
+                    CommandCollection commands = default,
+                    OptionCollection options = default)
             : base(name, help, commands, options)
         { }
 
-
-        public static Command Create(string name)
-            => new Command(name, default);
+        public static Command<T> Create<T>(string name, string help = default,
+                Argument<T> argument = default,
+                CommandCollection commands = default,
+                OptionCollection options = default)
+                => new Command<T>(name, help, argument, commands, options);
 
         public static Command<T> Create<T>(string name, string help = default,
-              Argument<T> argument = default,
-                     CommandCollection commands = default,
-                     OptionCollection options = default)
+                Argument<T> argument = default)
+                => new Command<T>(name, help, argument);
+
+        public static Command Create(string name, string help = default,
+                CommandCollection commands = default,
+                OptionCollection options = default)
+                => new Command(name, help, commands, options);
+
+        public static Command Create(string name, string help = default,
+                OptionCollection options = default)
+                => new Command(name, help, default, options);
+
+        public static Command Create(string name, string help = default,
+                CommandCollection commands = default)
+                => new Command(name, help, commands, default);
+
+        public static Command Create(string name,
+                OptionCollection options = default)
+             => new Command(name, default, default, options);
+
+        public static Command Create(string name,
+                 CommandCollection commands = default)
+              => new Command(name, default, commands, default);
+
+        public static Command<T> Create<T>(string name, string help = default,
+                 Argument<T> argument = default,
+                 IEnumerable<Command> commands = default,
+                 IEnumerable<Option> options = default)
               => new Command<T>(name, help, argument, commands, options);
 
         public static Command Create(string name, string help = default,
-                     CommandCollection commands = default,
-                     OptionCollection options = default)
-              => new Command(name, help, commands, options);
-
-        public static Command<T> Create<T>(string name, string help = default,
-             Argument<T> argument = default)
-              => new Command<T>(name, help, argument);
-
-        public static Command<T> Create<T>(string name, string help = default,
-             Argument<T> argument = default,
-             IEnumerable<Command> commands = default,
-             IEnumerable<Option> options = default)
-              => new Command<T>(name, help, argument, commands, options);
+                IEnumerable<Command> commands = default,
+                IEnumerable<Option> options = default)
+             => new Command(name, help, commands, options);
 
         public static Command Create(string name, string help = default,
-             IEnumerable<Command> commands = default,
-             IEnumerable<Option> options = default)
-              => new Command(name, help, commands, options);
+                IEnumerable<Option> options = default)
+                => new Command(name, help, default, default);
+
+        public static Command Create(string name, string help = default,
+                IEnumerable<Command> commands = default)
+                => new Command(name, help, commands, default);
+
+        public static Command Create(string name,
+                  IEnumerable<Option> options = default)
+               => new Command(name, default, default, options);
+
+        public static Command Create(string name,
+                 IEnumerable<Command> commands = default)
+              => new Command(name, default, commands, default);
 
         public static Command Create(string name, string help = default)
-            => new Command(name, help);
+            => new Command(name, help,default, default );
+
+        public static Command Create(string name)
+            => new Command(name, default, default, default);
+
 
     }
 
     public class Command<T> : Command, IHasArgument
     {
         internal Command(string name = default,
-                     string help = default,
-                     Argument<T> argument = default)
+                        string help = default,
+                        Argument<T> argument = default)
                 : this(name, help, default, default)
         { }
 
         internal Command(string name = default,
-                   string help = default,
-                   Argument<T> argument = default,
-                   CommandCollection commands = default,
-                   OptionCollection options = default)
-               : base(name, help, commands, options)
+                    string help = default,
+                    Argument<T> argument = default,
+                    CommandCollection commands = default,
+                    OptionCollection options = default)
+                : base(name, help, commands, options)
         {
             Argument = argument ?? Argument<T>.MakeArgument();
         }
 
         internal Command(string name = default,
-                 string help = default,
-                 Argument<T> argument = default,
-                 IEnumerable<Command> commands = default,
-                 IEnumerable<Option> options = default)
-           : base(name, help, commands, options)
+                    string help = default,
+                    Argument<T> argument = default,
+                    IEnumerable<Command> commands = default,
+                    IEnumerable<Option> options = default)
+            : base(name, help, commands, options)
         {
             Argument = argument ?? Argument<T>.MakeArgument();
         }

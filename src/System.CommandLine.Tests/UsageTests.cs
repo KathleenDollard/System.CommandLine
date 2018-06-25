@@ -8,6 +8,8 @@ namespace System.CommandLine.Tests
 {
     public class UsageTests
     {
+     
+
         private readonly CommandLine _command =
           CommandLine.Create("",
              commands: new Command[] {
@@ -16,8 +18,8 @@ namespace System.CommandLine.Tests
                       options: new[] {
                              Option.Create("opt1"),
                              Option.Create<int?>("opt2","help me!"),
-                             Option.Create<int?>( "opt3", ""),
-                             Option.Create("opt4", "",
+                             Option.Create<int?>( "opt3"),
+                             Option.Create("opt4", 
                                  argument: Argument.Create(arity: Arity.ExactlyOne, "opt_arg1", defaultValue: 0)),
                              Option.Create("opt5", "",
                                  argument: Argument.Create<int?>(arity: Arity.ZeroOrMore, "opt_arg2")) },
