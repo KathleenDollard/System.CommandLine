@@ -143,11 +143,6 @@ namespace System.CommandLine.Tests
         }
 
         [Fact]
-        // TODO: Talk to Jon about this syntax
-        // - value of early bind for testing
-        // - could pass command to Create (*)
-        // - could bind explicitly after attaching
-        // - could bind on InvokeAsync 
         public void Method_parameters_on_the_invoked_lambda_are_bound_to_matching_option_names()
         {
             var wasCalled = false;
